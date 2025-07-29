@@ -29,8 +29,7 @@ jobs:
       - name: Logs to check for DB to be healthy
         run: docker compose logs db
       - name: Debug DB health
-        run: |
-    docker compose exec -T db pg_isready -U "${{ secrets.POSTGRES_USER }}" -d "${{ secrets.POSTGRES_DB }}"
+        run: docker compose exec -T db pg_isready -U "${{ secrets.POSTGRES_USER }}" -d "${{ secrets.POSTGRES_DB }}"
 
       # - name: Migrate DB
       #   run: uv run bash scripts/prestart.sh
