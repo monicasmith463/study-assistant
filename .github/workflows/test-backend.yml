@@ -26,9 +26,12 @@ jobs:
           enable-cache: true
       - run: docker compose down -v --remove-orphans
       - run: docker compose up -d db mailcatcher
-      # - name: Migrate DB
-      #   run: uv run bash scripts/prestart.sh
-      #   working-directory: backend
+      - name: Logs to check for DB to be healthy
+        run: docker compose logs db
+      - name: Migrate DB
+        run: uv run bash scripts/prestart.sh
+        working-directory: backend
+        
       - name: Run tests
         run: uv run bash scripts/tests-start.sh "Coverage for ${{ github.sha }}"
         working-directory: backend
