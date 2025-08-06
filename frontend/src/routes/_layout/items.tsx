@@ -13,7 +13,6 @@ import { z } from "zod"
 
 import { ItemsService } from "@/client"
 import { ItemActionsMenu } from "@/components/Common/ItemActionsMenu"
-import AddItem from "@/components/Items/AddItem"
 import PendingItems from "@/components/Pending/PendingItems"
 import {
   PaginationItems,
@@ -137,7 +136,6 @@ function Items() {
       <Heading size="lg" pt={12}>
         Items Management
       </Heading>
-      <AddItem />
       <ItemsTable />
     </Container>
   )
