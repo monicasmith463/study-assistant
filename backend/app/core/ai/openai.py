@@ -1,7 +1,7 @@
 import logging
-from typing import Any
 from uuid import UUID
 
+from fastapi import HTTPException
 from langchain_openai import ChatOpenAI
 from pydantic import ValidationError
 from sqlalchemy import select
@@ -52,25 +52,24 @@ def fetch_document_texts(session: Session, document_ids: list[UUID]) -> list[str
         raise
 
 
-def validate_and_convert_question_item(q: Any) -> QuestionCreate | None:
+def validate_and_convert_question_item(q: QuestionOutput) -> QuestionCreate | None:
     """Validate LLM question item and convert to QuestionCreate."""
     try:
         return QuestionCreate(
             question=q.question,
-            answer=getattr(q, "answer", None),
+            answer=q.answer,
             type=QuestionType(q.type),
-            options=getattr(q, "options", []) or [],
+            options=q.options or [],
         )
     except ValidationError as ve:
         logger.error(f"Validation error for question item {q}: {ve}")
         raise
 
 
-def parse_llm_output(llm_output: Any) -> list[QuestionCreate]:
+def parse_llm_output(llm_output: list[QuestionOutput]) -> list[QuestionCreate]:
     """Parse LLM structured output into QuestionCreate list."""
     questions: list[QuestionCreate] = []
-
-    for q in llm_output.get("questions", []):
+    for q in llm_output.questions:
         qc = validate_and_convert_question_item(q)
         if qc:
             questions.append(qc)
@@ -95,7 +94,9 @@ async def generate_questions_from_documents(
         return parse_llm_output(llm_output)
     except ValidationError as ve:
         logger.error(f"Pydantic validation error: {ve}")
+        raise HTTPException(status_code=500, detail=f"LLM validation error: {ve}")
     except Exception as e:
         logger.error(f"Error generating questions from LLM: {e}")
-
-    return []
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate questions: {e}"
+        )
