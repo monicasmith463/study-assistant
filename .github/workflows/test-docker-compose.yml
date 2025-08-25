@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Create .env for Docker Compose
         run: |
           echo "POSTGRES_USER=$POSTGRES_USER" >> backend/.env
