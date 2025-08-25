@@ -5,7 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.core.extractors import extract_text_and_save_to_db
+from app.core.ai.extractors import extract_text_and_save_to_db
 from app.models import (
     Document,
     DocumentCreate,

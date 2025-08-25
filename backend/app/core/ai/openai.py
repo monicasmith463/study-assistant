@@ -2,6 +2,7 @@ import logging
 from typing import Any
 from uuid import UUID
 
+from fastapi import HTTPException
 from langchain_openai import ChatOpenAI
 from pydantic import ValidationError
 from sqlalchemy import select
@@ -21,18 +22,6 @@ llm = ChatOpenAI(
 )
 
 structured_llm = llm.with_structured_output(QuestionOutput)
-
-
-def get_document_texts_from_db(session: Session, document_ids: list[UUID]) -> list[str]:
-    try:
-        stmt = select(Document.extracted_text).where(Document.id.in_(document_ids))  # type: ignore[attr-defined, call-overload]
-        results = session.exec(stmt).all()
-        document_texts: list[str] = [text for (text,) in results if text]
-        if not document_texts:
-            raise Exception("No documents found with the provided IDs")
-        return document_texts
-    except Exception as e:
-        raise Exception(f"Error fetching document texts: {e}")
 
 
 def generate_questions_prompt(text: str, num_questions: int = 5) -> str:
@@ -69,9 +58,9 @@ def validate_and_convert_question_item(q: Any) -> QuestionCreate | None:
     try:
         return QuestionCreate(
             question=q.question,
-            answer=getattr(q, "answer", None),
+            answer=q.answer,
             type=QuestionType(q.type),
-            options=getattr(q, "options", []) or [],
+            options=q.options or [],
         )
     except ValidationError as ve:
         logger.error(f"Validation error for question item {q}: {ve}")
@@ -81,8 +70,7 @@ def validate_and_convert_question_item(q: Any) -> QuestionCreate | None:
 def parse_llm_output(llm_output: Any) -> list[QuestionCreate]:
     """Parse LLM structured output into QuestionCreate list."""
     questions: list[QuestionCreate] = []
-
-    for q in llm_output.get("questions", []):
+    for q in llm_output.questions:
         qc = validate_and_convert_question_item(q)
         if qc:
             questions.append(qc)
@@ -107,7 +95,9 @@ async def generate_questions_from_documents(
         return parse_llm_output(llm_output)
     except ValidationError as ve:
         logger.error(f"Pydantic validation error: {ve}")
+        raise HTTPException(status_code=500, detail=f"LLM validation error: {ve}")
     except Exception as e:
         logger.error(f"Error generating questions from LLM: {e}")
-
-    return []
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate questions: {e}"
+        )

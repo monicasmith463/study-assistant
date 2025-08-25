@@ -85,5 +85,5 @@ def skip_test_generate_exam_real(
     # assert "owner_id" in content[0], "Generated exam should have an owner ID"
 
     assert (
-        len(content["questions"]) == 4
+        len(content["questions"]) == 5
     ), f"Number of questions in exam should match generated questions. content: {content}"
