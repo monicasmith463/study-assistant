@@ -199,7 +199,7 @@ class DocumentChunkBase(SQLModel):
 
 class DocumentChunk(DocumentChunkBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    document_id: uuid.UUID = Field(foreign_key="document.id", nullable=False)
+    document_id: uuid.UUID = Field(foreign_key="document.id", nullable=False, ondelete="CASCADE")
     document: Document | None = Relationship(back_populates="chunks")
 
 
