@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum
 
-from pgvector.sqlalchemy import Vector
+from pgvector.sqlalchemy import Vector  # type: ignore
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import EmailStr
 from pydantic import Field as PydanticField
