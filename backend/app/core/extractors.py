@@ -16,10 +16,27 @@ def save_chunks_to_db(session: Session, document_id: str, chunks: list[str]) -> 
 
 
 def chunk_text(text: str, chunk_size: int = 1000) -> list[str]:
-    """
-    Splits the text into chunks of specified size.
-    """
-    return [text[i : i + chunk_size] for i in range(0, len(text), chunk_size)]
+    """Splits text into chunks respecting word boundaries."""
+    words = text.split()
+    chunks = []
+    current_chunk = []
+    current_size = 0
+    
+    for word in words:
+        word_size = len(word) + 1  # +1 for space
+        if current_size + word_size <= chunk_size:
+            current_chunk.append(word)
+            current_size += word_size
+        else:
+            if current_chunk:
+                chunks.append(' '.join(current_chunk))
+            current_chunk = [word]
+            current_size = word_size
+    
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+    
+    return chunks
 
 
 def extract_text_and_save_to_db(s3_key: str, document_id: str) -> None:
