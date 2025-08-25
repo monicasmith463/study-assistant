@@ -18,7 +18,7 @@ def save_chunks_to_db(session: Session, document_id: str, chunks: list[str]) -> 
 
 
 def perform_fixed_size_chunking(
-    document, chunk_size=1000, chunk_overlap=200
+    text: str, chunk_size: int = 1000, chunk_overlap: int = 200
 ) -> list[str]:
     """
     Performs fixed-size chunking on a document with specified overlap.
@@ -40,7 +40,7 @@ def perform_fixed_size_chunking(
     )
 
     # Split the text into chunks
-    chunks = text_splitter.split_text(document)
+    chunks = text_splitter.split_text(text)
     return chunks
 
 
