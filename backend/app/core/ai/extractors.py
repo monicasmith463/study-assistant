@@ -17,7 +17,9 @@ def save_chunks_to_db(session: Session, document_id: str, chunks: list[str]) -> 
         session.add(document_chunk)
 
 
-def perform_fixed_size_chunking(document, chunk_size=1000, chunk_overlap=200) -> None:
+def perform_fixed_size_chunking(
+    document, chunk_size=1000, chunk_overlap=200
+) -> list[str]:
     """
     Performs fixed-size chunking on a document with specified overlap.
 

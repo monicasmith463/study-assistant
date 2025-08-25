@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -52,7 +53,7 @@ def fetch_document_texts(session: Session, document_ids: list[UUID]) -> list[str
         raise
 
 
-def validate_and_convert_question_item(q: QuestionOutput) -> QuestionCreate | None:
+def validate_and_convert_question_item(q: Any) -> QuestionCreate | None:
     """Validate LLM question item and convert to QuestionCreate."""
     try:
         return QuestionCreate(
@@ -66,7 +67,7 @@ def validate_and_convert_question_item(q: QuestionOutput) -> QuestionCreate | No
         raise
 
 
-def parse_llm_output(llm_output: list[QuestionOutput]) -> list[QuestionCreate]:
+def parse_llm_output(llm_output: Any) -> list[QuestionCreate]:
     """Parse LLM structured output into QuestionCreate list."""
     questions: list[QuestionCreate] = []
     for q in llm_output.questions:
