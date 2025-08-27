@@ -30,6 +30,7 @@ def create_random_exam(
                 QuestionCreate(
                     question=f"What is the answer to question {i+1} of {title}?",
                     answer=f"Answer {i+1}",
+                    type="multiple_choice",
                     exam_id=db_exam.id,
                 )
             )
