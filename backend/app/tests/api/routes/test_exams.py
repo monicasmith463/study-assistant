@@ -180,6 +180,6 @@ def test_delete_exam_not_enough_permissions(
         f"{settings.API_V1_STR}/exams/{exam.id}",
         headers=normal_user_token_headers,
     )
-    assert response.status_code == 400
+    assert response.status_code == 403
     content = response.json()
     assert content["detail"] == "Not enough permissions"
