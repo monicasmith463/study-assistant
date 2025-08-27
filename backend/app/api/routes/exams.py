@@ -109,7 +109,7 @@ def update_exam(
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
     if not current_user.is_superuser and (exam.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     update_dict = exam_in.model_dump(exclude_unset=True)
     exam.sqlmodel_update(update_dict)
     session.add(exam)
