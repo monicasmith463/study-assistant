@@ -128,7 +128,7 @@ def delete_exam(
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
     if not current_user.is_superuser and (exam.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     session.delete(exam)
     session.commit()
     return Message(message="Exam deleted successfully")
