@@ -132,3 +132,4 @@ def create_exam_attempt(
 
     session.add(exam_attempt)
     session.commit()
+    return ExamAttemptPublic.model_validate(exam_attempt)
