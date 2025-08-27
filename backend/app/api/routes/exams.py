@@ -50,19 +50,6 @@ async def generate_exam(
     )
 
 
-@router.get("/{id}", response_model=ExamPublic)
-def read_exam(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
-    """
-    Get exam by ID.
-    """
-    exam = session.get(Exam, id)
-    if not exam:
-        raise HTTPException(status_code=404, detail="Exam not found")
-    if not current_user.is_superuser and (exam.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
-    return exam
-
-
 @router.get("/", response_model=ExamsPublic)
 def read_exams(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
@@ -92,6 +79,18 @@ def read_exams(
         exams = session.exec(statement).all()
 
     return ExamsPublic(data=exams, count=count)
+
+
+def read_exam(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
+    """
+    Get exam by ID.
+    """
+    exam = session.get(Exam, id)
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    if not current_user.is_superuser and (exam.owner_id != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+    return exam
 
 
 @router.put("/{id}", response_model=ExamPublic)
