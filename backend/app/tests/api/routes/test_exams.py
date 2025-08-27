@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -122,3 +123,63 @@ def test_read_exams(
     assert response.status_code == 200
     content = response.json()
     assert len(content["data"]) >= 2
+
+
+def test_update_exam(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    exam = create_random_exam(db)
+    data = {"title": "UpdatedKey"}
+    response = client.put(
+        f"{settings.API_V1_STR}/exams/{exam.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    content = response.json()
+    assert response.status_code == 200
+
+    assert content["title"] == data["title"]
+    assert content["is_published"] == exam.is_published
+    assert content.get("questions")
+    assert content["description"] == exam.description
+    assert content["duration_minutes"] == exam.duration_minutes
+    assert content["id"] == str(exam.id)
+    assert content["owner_id"] == str(exam.owner_id)
+
+
+def test_delete_exam(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    exam = create_random_exam(db)
+    response = client.delete(
+        f"{settings.API_V1_STR}/exams/{exam.id}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["message"] == "Exam deleted successfully"
+
+
+def test_delete_exam_not_found(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    response = client.delete(
+        f"{settings.API_V1_STR}/exams/{uuid.uuid4()}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Exam not found"
+
+
+def test_delete_exam_not_enough_permissions(
+    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    exam = create_random_exam(db)
+    response = client.delete(
+        f"{settings.API_V1_STR}/exams/{exam.id}",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 400
+    content = response.json()
+    assert content["detail"] == "Not enough permissions"
