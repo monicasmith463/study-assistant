@@ -1,9 +1,19 @@
+from typing import Any
+
 from fastapi import APIRouter
+from sqlmodel import func, select
 
 from app import crud
 from app.api.deps import CurrentUser, SessionDep
 from app.core.ai.openai import generate_questions_from_documents
-from app.models import ExamCreate, ExamPublic, GenerateQuestionsRequest, QuestionCreate
+from app.models import (
+    Exam,
+    ExamCreate,
+    ExamPublic,
+    ExamsPublic,
+    GenerateQuestionsRequest,
+    QuestionCreate,
+)
 
 router = APIRouter(prefix="/exams", tags=["exams"])
 
@@ -35,3 +45,36 @@ async def generate_exam(
         db_exam=db_exam,
         questions=generated_questions,
     )
+
+
+@router.get("/", response_model=ExamsPublic)
+def read_exams(
+    session: SessionDep,
+    current_user: CurrentUser,
+    skip: int = 0,
+    limit: int = 100,
+) -> Any:
+    """
+    Retrieve exams for the current user.
+    """
+    if current_user.is_superuser:
+        count_statement = select(func.count()).select_from(Exam)
+        count = session.exec(count_statement).one()
+        statement = select(Exam).offset(skip).limit(limit)
+        exams = session.exec(statement).all()
+    else:
+        count_statement = (
+            select(func.count())
+            .select_from(Exam)
+            .where(Exam.owner_id == current_user.id)
+        )
+        count = session.exec(count_statement).one()
+        statement = (
+            select(Exam)
+            .where(Exam.owner_id == current_user.id)
+            .offset(skip)
+            .limit(limit)
+        )
+        exams = session.exec(statement).all()
+
+    return ExamsPublic(data=exams, count=count)

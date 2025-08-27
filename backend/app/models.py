@@ -88,6 +88,11 @@ class ExamPublic(ExamBase):
     questions: list["QuestionPublic"] = PydanticField(default_factory=list)
 
 
+class ExamsPublic(SQLModel):
+    data: list[ExamPublic]
+    count: int
+
+
 class ExamCreate(ExamBase):
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=1000)
