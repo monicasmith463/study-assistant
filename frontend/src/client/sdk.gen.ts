@@ -16,12 +16,14 @@ import type {
   DocumentsDeleteDocumentResponse,
   ExamsGenerateExamData,
   ExamsGenerateExamResponse,
-  ExamsReadExamsData,
-  ExamsReadExamsResponse,
+  ExamsReadExamData,
+  ExamsReadExamResponse,
   ExamsUpdateExamData,
   ExamsUpdateExamResponse,
   ExamsDeleteExamData,
   ExamsDeleteExamResponse,
+  ExamsReadExamsData,
+  ExamsReadExamsResponse,
   LoginLoginAccessTokenData,
   LoginLoginAccessTokenResponse,
   LoginTestTokenResponse,
@@ -199,23 +201,21 @@ export class ExamsService {
   }
 
   /**
-   * Read Exams
-   * Retrieve exams.
+   * Read Exam
+   * Get exam by ID.
    * @param data The data for the request.
-   * @param data.skip
-   * @param data.limit
-   * @returns ExamsPublic Successful Response
+   * @param data.id
+   * @returns ExamPublic Successful Response
    * @throws ApiError
    */
-  public static readExams(
-    data: ExamsReadExamsData = {},
-  ): CancelablePromise<ExamsReadExamsResponse> {
+  public static readExam(
+    data: ExamsReadExamData,
+  ): CancelablePromise<ExamsReadExamResponse> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/api/v1/exams/",
-      query: {
-        skip: data.skip,
-        limit: data.limit,
+      url: "/api/v1/exams/{id}",
+      path: {
+        id: data.id,
       },
       errors: {
         422: "Validation Error",
@@ -265,6 +265,31 @@ export class ExamsService {
       url: "/api/v1/exams/{id}",
       path: {
         id: data.id,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Read Exams
+   * Retrieve exams.
+   * @param data The data for the request.
+   * @param data.skip
+   * @param data.limit
+   * @returns ExamsPublic Successful Response
+   * @throws ApiError
+   */
+  public static readExams(
+    data: ExamsReadExamsData = {},
+  ): CancelablePromise<ExamsReadExamsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/exams/",
+      query: {
+        skip: data.skip,
+        limit: data.limit,
       },
       errors: {
         422: "Validation Error",
