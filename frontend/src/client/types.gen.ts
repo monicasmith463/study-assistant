@@ -47,6 +47,18 @@ export type ExamPublic = {
   questions?: Array<QuestionPublic>
 }
 
+export type ExamsPublic = {
+  data: Array<ExamPublic>
+  count: number
+}
+
+export type ExamUpdate = {
+  title?: string | null
+  description?: string | null
+  duration_minutes?: number | null
+  is_published?: boolean | null
+}
+
 export type GenerateQuestionsRequest = {
   document_ids: Array<string>
 }
@@ -174,6 +186,32 @@ export type ExamsGenerateExamData = {
 }
 
 export type ExamsGenerateExamResponse = ExamPublic
+
+export type ExamsReadExamData = {
+  id: string
+}
+
+export type ExamsReadExamResponse = ExamPublic
+
+export type ExamsUpdateExamData = {
+  id: string
+  requestBody: ExamUpdate
+}
+
+export type ExamsUpdateExamResponse = ExamPublic
+
+export type ExamsDeleteExamData = {
+  id: string
+}
+
+export type ExamsDeleteExamResponse = Message
+
+export type ExamsReadExamsData = {
+  limit?: number
+  skip?: number
+}
+
+export type ExamsReadExamsResponse = ExamsPublic
 
 export type LoginLoginAccessTokenData = {
   formData: Body_login_login_access_token

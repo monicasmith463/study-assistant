@@ -16,6 +16,14 @@ import type {
   DocumentsDeleteDocumentResponse,
   ExamsGenerateExamData,
   ExamsGenerateExamResponse,
+  ExamsReadExamData,
+  ExamsReadExamResponse,
+  ExamsUpdateExamData,
+  ExamsUpdateExamResponse,
+  ExamsDeleteExamData,
+  ExamsDeleteExamResponse,
+  ExamsReadExamsData,
+  ExamsReadExamsResponse,
   LoginLoginAccessTokenData,
   LoginLoginAccessTokenResponse,
   LoginTestTokenResponse,
@@ -186,6 +194,103 @@ export class ExamsService {
       url: "/api/v1/exams/generate",
       body: data.requestBody,
       mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Read Exam
+   * Get exam by ID.
+   * @param data The data for the request.
+   * @param data.id
+   * @returns ExamPublic Successful Response
+   * @throws ApiError
+   */
+  public static readExam(
+    data: ExamsReadExamData,
+  ): CancelablePromise<ExamsReadExamResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/exams/{id}",
+      path: {
+        id: data.id,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Update Exam
+   * Update an exam.
+   * @param data The data for the request.
+   * @param data.id
+   * @param data.requestBody
+   * @returns ExamPublic Successful Response
+   * @throws ApiError
+   */
+  public static updateExam(
+    data: ExamsUpdateExamData,
+  ): CancelablePromise<ExamsUpdateExamResponse> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/api/v1/exams/{id}",
+      path: {
+        id: data.id,
+      },
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Delete Exam
+   * Delete an exam.
+   * @param data The data for the request.
+   * @param data.id
+   * @returns Message Successful Response
+   * @throws ApiError
+   */
+  public static deleteExam(
+    data: ExamsDeleteExamData,
+  ): CancelablePromise<ExamsDeleteExamResponse> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api/v1/exams/{id}",
+      path: {
+        id: data.id,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Read Exams
+   * Retrieve exams.
+   * @param data The data for the request.
+   * @param data.skip
+   * @param data.limit
+   * @returns ExamsPublic Successful Response
+   * @throws ApiError
+   */
+  public static readExams(
+    data: ExamsReadExamsData = {},
+  ): CancelablePromise<ExamsReadExamsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/exams/",
+      query: {
+        skip: data.skip,
+        limit: data.limit,
+      },
       errors: {
         422: "Validation Error",
       },
