@@ -228,7 +228,6 @@ export type ExamsCreateExamAttemptData = {
 
 export type ExamsCreateExamAttemptResponse = ExamAttemptPublic
 
-
 export type LoginLoginAccessTokenData = {
   formData: Body_login_login_access_token
 }
