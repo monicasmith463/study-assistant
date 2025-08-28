@@ -24,6 +24,8 @@ import type {
   ExamsDeleteExamResponse,
   ExamsReadExamsData,
   ExamsReadExamsResponse,
+  ExamsCreateExamAttemptData,
+  ExamsCreateExamAttemptResponse,
   LoginLoginAccessTokenData,
   LoginLoginAccessTokenResponse,
   LoginTestTokenResponse,
@@ -296,6 +298,30 @@ export class ExamsService {
       },
     })
   }
+
+  /**
+   * Create Exam Attempt
+   * Create an exam attempt for a specific exam.
+   * @param data The data for the request.
+   * @param data.id
+   * @returns ExamAttemptPublic Successful Response
+   * @throws ApiError
+   */
+  public static createExamAttempt(
+    data: ExamsCreateExamAttemptData,
+  ): CancelablePromise<ExamsCreateExamAttemptResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/exams/{id}/attempts",
+      path: {
+        id: data.id,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
 }
 
 export class LoginService {

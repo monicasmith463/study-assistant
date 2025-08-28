@@ -9,6 +9,8 @@ from app.models import (
     DocumentCreate,
     DocumentPublic,
     Exam,
+    ExamAttempt,
+    ExamAttemptPublic,
     ExamCreate,
     ExamPublic,
     Question,
@@ -117,3 +119,17 @@ def create_exam(
 
     session.refresh(db_exam, attribute_names=["questions"])
     return ExamPublic.model_validate(db_exam)
+
+
+def create_exam_attempt(
+    *, session: Session, exam_id: UUID, user_id: UUID
+) -> ExamAttemptPublic:
+    exam = session.get(Exam, exam_id)
+    if not exam:
+        raise ValueError("Exam not found")
+
+    exam_attempt = ExamAttempt(exam_id=exam_id, user_id=user_id)
+
+    session.add(exam_attempt)
+    session.commit()
+    return ExamAttemptPublic.model_validate(exam_attempt)

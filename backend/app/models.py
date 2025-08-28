@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from enum import Enum
 
 from pgvector.sqlalchemy import Vector  # type: ignore
@@ -80,6 +81,9 @@ class Exam(ExamBase, table=True):
     questions: list["Question"] = Relationship(
         back_populates="exam", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+    exam_attempts: list["ExamAttempt"] = Relationship(
+        back_populates="exam", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
 
 class ExamPublic(ExamBase):
@@ -127,7 +131,7 @@ class Question(QuestionBase, table=True):
         sa_column=Column(SAEnum(QuestionType), nullable=False),
     )
     options: list[str] = Field(default_factory=list, sa_column=Column(JSON))
-    exam_id: uuid.UUID = Field(foreign_key="exam.id", nullable=False)  # <--- add this
+    exam_id: uuid.UUID = Field(foreign_key="exam.id", nullable=False)
     exam: Exam | None = Relationship(back_populates="questions")
 
 
@@ -147,6 +151,49 @@ class QuestionCreate(QuestionBase):
 class GenerateQuestionsRequest(SQLModel):
     document_ids: list[uuid.UUID]
     # maybe add difficulty, number of questions, etc.
+
+
+class ExamAttemptBase(SQLModel):
+    score: float | None = None
+
+
+class ExamAttempt(ExamAttemptBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    exam_id: uuid.UUID = Field(
+        foreign_key="exam.id", nullable=False, ondelete="CASCADE"
+    )
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
+    exam: Exam | None = Relationship(back_populates="exam_attempts")
+    completed_at: datetime | None = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc)},
+    )
+
+
+class ExamAttemptPublic(ExamAttemptBase):
+    id: uuid.UUID
+    exam_id: uuid.UUID
+    completed_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class Answer(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    attempt_id: uuid.UUID = Field(foreign_key="examattempt.id", nullable=False)
+    question_id: uuid.UUID = Field(foreign_key="question.id", nullable=False)
+    response: str
+    is_correct: bool | None = None
+    explanation: str | None = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc)},
+    )
 
 
 # Shared properties
