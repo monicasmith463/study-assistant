@@ -162,7 +162,7 @@ class ExamAttempt(ExamAttemptBase, table=True):
     exam_id: uuid.UUID = Field(
         foreign_key="exam.id", nullable=False, ondelete="CASCADE"
     )
-    user_id: uuid.UUID = Field(
+    owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
     exam: Exam | None = Relationship(back_populates="exam_attempts")
