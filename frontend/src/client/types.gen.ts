@@ -37,6 +37,15 @@ export type DocumentUpdate = {
   size?: number | null
 }
 
+export type ExamAttemptPublic = {
+  score?: number | null
+  id: string
+  exam_id: string
+  completed_at?: string | null
+  created_at: string
+  updated_at: string
+}
+
 export type ExamPublic = {
   title: string
   description?: string | null
@@ -187,12 +196,11 @@ export type ExamsGenerateExamData = {
 
 export type ExamsGenerateExamResponse = ExamPublic
 
-export type ExamsReadExamsData = {
-  limit?: number
-  skip?: number
+export type ExamsReadExamData = {
+  id: string
 }
 
-export type ExamsReadExamsResponse = ExamsPublic
+export type ExamsReadExamResponse = ExamPublic
 
 export type ExamsUpdateExamData = {
   id: string
@@ -206,6 +214,19 @@ export type ExamsDeleteExamData = {
 }
 
 export type ExamsDeleteExamResponse = Message
+
+export type ExamsReadExamsData = {
+  limit?: number
+  skip?: number
+}
+
+export type ExamsReadExamsResponse = ExamsPublic
+
+export type ExamsCreateExamAttemptData = {
+  id: string
+}
+
+export type ExamsCreateExamAttemptResponse = ExamAttemptPublic
 
 export type LoginLoginAccessTokenData = {
   formData: Body_login_login_access_token
