@@ -9,7 +9,6 @@ from app.api.deps import CurrentUser, SessionDep
 from app.core.ai.openai import generate_questions_from_documents
 from app.models import (
     Exam,
-    ExamAttemptPublic,
     ExamCreate,
     ExamPublic,
     ExamsPublic,
@@ -29,6 +28,7 @@ async def generate_exam(
     payload: GenerateQuestionsRequest,
     current_user: CurrentUser,
 ) -> ExamPublic:
+    # TODO: fix the hardcoding here
     exam_in = ExamCreate(
         title="Midterm Exam",
         description="generated exam",
@@ -134,18 +134,3 @@ def delete_exam(
     session.delete(exam)
     session.commit()
     return Message(message="Exam deleted successfully")
-
-
-@router.post("/{id}/attempts", response_model=ExamAttemptPublic)
-def create_exam_attempt(
-    session: SessionDep, current_user: CurrentUser, id: uuid.UUID
-) -> Any:
-    """
-    Create an exam attempt for a specific exam.
-    """
-    exam_attempt = crud.create_exam_attempt(
-        session=session,
-        user_id=current_user.id,
-        exam_id=id,
-    )
-    return exam_attempt
