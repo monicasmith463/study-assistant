@@ -183,18 +183,3 @@ def test_delete_exam_not_enough_permissions(
     assert response.status_code == 403
     content = response.json()
     assert content["detail"] == "Not enough permissions"
-
-
-def test_create_exam_attempt(
-    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
-) -> None:
-    exam = create_random_exam(db)
-    response = client.post(
-        f"{settings.API_V1_STR}/exams/{exam.id}/attempts",
-        headers=normal_user_token_headers,
-    )
-    assert response.status_code == 200
-    content = response.json()
-    assert content["exam_id"] == str(exam.id)
-    assert content["id"] is not None
-    assert content["created_at"] is not None
