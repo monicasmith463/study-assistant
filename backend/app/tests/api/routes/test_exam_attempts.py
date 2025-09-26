@@ -38,7 +38,7 @@ def test_create_exam_attempt_not_found(
     payload = {"exam_id": str(uuid.uuid4())}
 
     response = client.post(
-        f"{settings.API_V1_STR}/exams-attempts/",
+        f"{settings.API_V1_STR}/exam-attempts/",
         headers=superuser_token_headers,
         json=payload,
     )
@@ -55,9 +55,9 @@ def test_create_exam_attempt_not_enough_permissions(
 
     exam = create_random_exam(db)
 
-    with patch("app.api.routes.exam_attempts.session.get", return_value=exam):
+    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
         response = client.post(
-            f"{settings.API_V1_STR}/exams-attempts/",
+            f"{settings.API_V1_STR}/exam-attempts/",
             headers=normal_user_token_headers,
             json={"exam_id": str(exam.id)},
         )
@@ -80,9 +80,9 @@ def test_read_exam_attempt(
     db.commit()
     db.refresh(exam_attempt)
 
-    with patch("app.api.routes.exam_attempts.session.get", return_value=exam):
+    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
         response = client.get(
-            f"{settings.API_V1_STR}/exams-attempts/{exam_attempt.id}",
+            f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
             headers=superuser_token_headers,
         )
 
@@ -99,7 +99,7 @@ def test_read_exam_attempt_not_found(
     """Test reading an exam attempt that does not exist."""
 
     response = client.get(
-        f"{settings.API_V1_STR}/exams-attempts/{uuid.uuid4()}",
+        f"{settings.API_V1_STR}/exam-attempts/{uuid.uuid4()}",
         headers=superuser_token_headers,
     )
 
@@ -115,14 +115,14 @@ def test_read_exam_attempt_not_enough_permissions(
     """Test that a normal user cannot read another user's exam attempt."""
 
     # Create an exam and attempt owned by another user
-    exam = create_random_exam(db, owner_id=uuid.uuid4())
+    exam = create_random_exam(db)
     exam_attempt = ExamAttempt(exam_id=exam.id, owner_id=exam.owner_id)
     db.add(exam_attempt)
     db.commit()
     db.refresh(exam_attempt)
 
     response = client.get(
-        f"{settings.API_V1_STR}/exams-attempts/{exam_attempt.id}",
+        f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
         headers=normal_user_token_headers,
     )
 
