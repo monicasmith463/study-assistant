@@ -10,6 +10,7 @@ from app.models import (
     DocumentPublic,
     Exam,
     ExamAttempt,
+    ExamAttemptCreate,
     ExamAttemptPublic,
     ExamCreate,
     ExamPublic,
@@ -122,13 +123,9 @@ def create_exam(
 
 
 def create_exam_attempt(
-    *, session: Session, exam_id: UUID, user_id: UUID
+    *, session: Session, exam_in: ExamAttemptCreate, user_id: UUID
 ) -> ExamAttemptPublic:
-    exam = session.get(Exam, exam_id)
-    if not exam:
-        raise ValueError("Exam not found")
-
-    exam_attempt = ExamAttempt(exam_id=exam_id, user_id=user_id)
+    exam_attempt = ExamAttempt(**exam_in.model_dump(), owner_id=user_id)
 
     session.add(exam_attempt)
     session.commit()

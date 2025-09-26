@@ -3,13 +3,42 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
+from app import crud
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
+    Exam,
     ExamAttempt,
+    ExamAttemptCreate,
     ExamAttemptPublic,
 )
 
-router = APIRouter(prefix="/exams-attempts", tags=["exam-attempts"])
+router = APIRouter(prefix="/exam-attempts", tags=["exam-attempts"])
+
+
+def get_exam_by_id(session: SessionDep, exam_in: ExamAttemptCreate) -> Exam | None:
+    exam = session.get(Exam, exam_in.exam_id)
+    return exam
+
+
+@router.post("/", response_model=ExamAttemptPublic)
+def create_exam_attempt(
+    session: SessionDep, current_user: CurrentUser, exam_in: ExamAttemptCreate
+) -> Any:
+    """
+    Create a new exam attempt for a specific exam.
+    """
+    exam = get_exam_by_id(session, exam_in)
+    print("Exam fetched ******:", exam)
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
+    if not current_user.is_superuser and exam.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    exam_attempt = crud.create_exam_attempt(
+        session=session, user_id=current_user.id, exam_in=exam_in
+    )
+    return exam_attempt
 
 
 @router.get("/{id}", response_model=ExamAttemptPublic)

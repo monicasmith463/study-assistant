@@ -182,6 +182,10 @@ class ExamAttemptPublic(ExamAttemptBase):
     updated_at: datetime
 
 
+class ExamAttemptCreate(ExamAttemptBase):
+    exam_id: uuid.UUID
+
+
 class Answer(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     attempt_id: uuid.UUID = Field(foreign_key="examattempt.id", nullable=False)
