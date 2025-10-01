@@ -155,6 +155,7 @@ class GenerateQuestionsRequest(SQLModel):
 
 class ExamAttemptBase(SQLModel):
     score: float | None = None
+    is_complete: bool = Field(default=False)
 
 
 class ExamAttempt(ExamAttemptBase, table=True):
@@ -186,13 +187,31 @@ class ExamAttemptCreate(ExamAttemptBase):
     exam_id: uuid.UUID
 
 
-class Answer(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    attempt_id: uuid.UUID = Field(foreign_key="examattempt.id", nullable=False)
-    question_id: uuid.UUID = Field(foreign_key="question.id", nullable=False)
+class ExamAttemptUpdate(SQLModel):
+    is_complete: bool | None = None
+
+
+class AnswerBase(SQLModel):
     response: str
     is_correct: bool | None = None
     explanation: str | None = None
+
+
+class AnswerPublic(AnswerBase):
+    id: uuid.UUID
+    question_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+
+class AnswerUpdate(AnswerBase):
+    id: uuid.UUID
+
+
+class Answer(AnswerBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    attempt_id: uuid.UUID = Field(foreign_key="examattempt.id", nullable=False)
+    question_id: uuid.UUID = Field(foreign_key="question.id", nullable=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

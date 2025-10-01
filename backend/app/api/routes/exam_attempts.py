@@ -10,6 +10,7 @@ from app.models import (
     ExamAttempt,
     ExamAttemptCreate,
     ExamAttemptPublic,
+    ExamAttemptUpdate,
 )
 
 router = APIRouter(prefix="/exam-attempts", tags=["exam-attempts"])
@@ -55,3 +56,26 @@ def read_exam_attempt(
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     return exam_attempt
+
+
+@router.patch("/{attempt_id}", response_model=ExamAttemptPublic)
+def update_exam_attempt(
+    *,
+    session: SessionDep,
+    exam_attempt_in: ExamAttemptUpdate,
+    current_user: CurrentUser,
+) -> ExamAttemptPublic:
+    """
+    Update an exam attempt with answers.
+    If `is_complete=True`, compute the score.
+    """
+    exam_attempt = session.get(ExamAttempt, exam_attempt_in.attempt_id)
+    if not exam_attempt:
+        raise HTTPException(status_code=404, detail="Exam attempt not found")
+
+    if exam_attempt.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    exam_attempt = crud.update_exam_attempt(
+        session=session, exam_attempt=exam_attempt, exam_attempt_in=exam_attempt_in
+    )

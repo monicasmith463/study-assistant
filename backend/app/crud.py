@@ -1,3 +1,4 @@
+import uuid
 from typing import Any
 from uuid import UUID
 
@@ -5,6 +6,9 @@ from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
 from app.models import (
+    Answer,
+    AnswerPublic,
+    AnswerUpdate,
     Document,
     DocumentCreate,
     DocumentPublic,
@@ -12,6 +16,7 @@ from app.models import (
     ExamAttempt,
     ExamAttemptCreate,
     ExamAttemptPublic,
+    ExamAttemptUpdate,
     ExamCreate,
     ExamPublic,
     Question,
@@ -130,3 +135,83 @@ def create_exam_attempt(
     session.add(exam_attempt)
     session.commit()
     return ExamAttemptPublic.model_validate(exam_attempt)
+
+
+def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
+    """
+    Compute score for an exam attempt and update each answer's is_correct.
+    Returns the total score as a float.
+    """
+    total_questions = len(exam_attempt.answers)
+    correct_count = 0
+
+    for answer in exam_attempt.answers:
+        question = answer.question  # relationship
+        if not question.answer:
+            continue  # skip if no answer key
+
+        # Mark whether answer is correct
+        is_correct = answer.response.strip().lower() == question.answer.strip().lower()
+        answer.is_correct = is_correct
+        session.add(answer)
+
+        if is_correct:
+            correct_count += 1
+
+    # Compute score as percentage
+    score = (correct_count / total_questions) * 100 if total_questions else 0
+    exam_attempt.score = score
+    session.add(exam_attempt)
+    session.commit()
+    session.refresh(exam_attempt)
+
+    return score
+
+
+def update_answers(
+    *, session: Session, attempt_id: uuid.UUID, answers_in: list[AnswerUpdate]
+) -> list[AnswerPublic]:
+    updated_answers = []
+    for answer_in in answers_in:
+        answer = session.get(Answer, answer_in.id)
+        if not answer or answer.attempt_id != attempt_id:
+            continue  # or raise an error if strict
+        answer.response = answer_in.response
+        session.add(answer)
+        updated_answers.append(answer)
+
+    session.commit()
+    return updated_answers
+
+
+def update_exam_attempt(
+    *,
+    session: Session,
+    db_exam_attempt: ExamAttempt,
+    exam_attempt_in: ExamAttemptUpdate,
+) -> ExamAttempt:
+    # Prevent updates if already locked
+    if db_exam_attempt.is_complete:
+        raise ValueError("Exam attempt is already submitted and cannot be modified.")
+
+    # Update attempt-level fields
+    if exam_attempt_in.is_complete is not None:
+        db_exam_attempt.is_complete = exam_attempt_in.is_complete
+
+    # Delegate answers
+    if exam_attempt_in.answers:
+        update_answers(
+            session=session,
+            attempt_id=db_exam_attempt.id,
+            answers_in=exam_attempt_in.answers,
+        )
+
+    session.add(db_exam_attempt)
+    session.commit()
+    session.refresh(db_exam_attempt)
+
+    # Score if exam is submitted
+    if db_exam_attempt.is_complete:
+        score_exam_attempt(session=session, exam_attempt=db_exam_attempt)
+
+    return db_exam_attempt
