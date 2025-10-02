@@ -74,7 +74,7 @@ def update_exam_attempt(
     if not exam_attempt:
         raise HTTPException(status_code=404, detail="Exam attempt not found")
 
-    if exam_attempt.owner_id != current_user.id:
+    if not current_user.is_superuser and exam_attempt.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not allowed")
 
     if exam_attempt.is_complete:
