@@ -144,7 +144,7 @@ def test_update_exam_attempt_success(client: TestClient, db: Session):
 
     payload = {
         "answers": [
-            {"id": str(answer.id), "question_id": str(question.id), "response": "4"}
+            {"id": str(answer.id), "response": "4"}
         ]
     }
     with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
