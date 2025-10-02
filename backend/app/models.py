@@ -205,8 +205,9 @@ class AnswerPublic(AnswerBase):
     updated_at: datetime
 
 
-class AnswerUpdate(AnswerBase):
+class AnswerUpdate(SQLModel):
     id: uuid.UUID
+    response: str
 
 
 class Answer(AnswerBase, table=True):
