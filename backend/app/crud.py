@@ -174,8 +174,10 @@ def update_answers(
     updated_answers = []
     for answer_in in answers_in:
         answer = session.get(Answer, answer_in.id)
-        if not answer or answer.attempt_id != attempt_id:
-            continue  # or raise an error if strict
+        if not answer:
+            raise ValueError(f"Answer {answer_in.id} not found")
+        if answer.attempt_id != attempt_id:
+            raise ValueError(f"Answer {answer_in.id} does not belong to exam attempt {attempt_id}")
         answer.response = answer_in.response
         session.add(answer)
         updated_answers.append(answer)
