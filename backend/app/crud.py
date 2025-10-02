@@ -205,11 +205,11 @@ def update_exam_attempt(
         )
 
     session.add(db_exam_attempt)
-    session.commit()
-    session.refresh(db_exam_attempt)
 
-    # Score if exam is submitted
+    # Score if exam is submitted - do this before commit
     if db_exam_attempt.is_complete:
         score_exam_attempt(session=session, exam_attempt=db_exam_attempt)
 
-    # return ExamAttemptPublic.model_validate(db_exam_attempt)
+    session.commit()
+    session.refresh(db_exam_attempt)
+    return db_exam_attempt
