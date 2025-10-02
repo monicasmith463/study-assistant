@@ -6,7 +6,8 @@ from sqlmodel import Session
 
 from app.core.config import settings
 from app.models import ExamAttempt
-from app.tests.utils.exam import create_random_exam
+from app.tests.utils.exam import create_exam_with_attempt_and_answer, create_random_exam
+from app.tests.utils.user import create_random_user, create_random_user_with_password
 
 
 def test_create_exam_attempt_success(
@@ -128,3 +129,109 @@ def test_read_exam_attempt_not_enough_permissions(
 
     assert response.status_code == 403
     assert response.json()["detail"] == "Not enough permissions"
+
+
+def test_update_exam_attempt_success(client: TestClient, db: Session):
+    user, password = create_random_user_with_password(db)
+    login_data = {"username": user.email, "password": password}
+    r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
+    token = r.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    exam, question, exam_attempt, answer = create_exam_with_attempt_and_answer(
+        db, owner_id=user.id
+    )
+
+    payload = {
+        "answers": [
+            {"id": str(answer.id), "question_id": str(question.id), "response": "4"}
+        ]
+    }
+    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
+        response = client.patch(
+            f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
+            headers=headers,
+            json=payload,
+        )
+
+    assert response.status_code == 200
+
+
+def test_update_exam_attempt_locked(client: TestClient, db: Session):
+    # 1️⃣ Create a random user and their token
+    user, password = create_random_user_with_password(db)
+    login_data = {"username": user.email, "password": password}
+    r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
+    token = r.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 2️⃣ Create exam attempt owned by this user and mark it as complete
+    exam, question, exam_attempt, answer = create_exam_with_attempt_and_answer(
+        db, owner_id=user.id
+    )
+    exam_attempt.is_complete = True
+    db.add(exam_attempt)
+    db.commit()
+    db.refresh(exam_attempt)
+
+    # 3️⃣ Attempt to update the completed exam attempt
+    payload = {
+        "answers": [
+            {
+                "id": str(answer.id),
+                "question_id": str(question.id),
+                "response": "new answer",
+            }
+        ]
+    }
+
+    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
+        response = client.patch(
+            f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
+            headers=headers,
+            json=payload,
+        )
+
+    # 4️⃣ Assertions
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Exam attempt is already completed"
+
+
+def test_update_exam_attempt_not_found(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+):
+    payload = {"answers": [{"question_id": str(uuid.uuid4()), "response": "test"}]}
+
+    response = client.patch(
+        f"{settings.API_V1_STR}/exam-attempts/{uuid.uuid4()}",
+        headers=superuser_token_headers,
+        json=payload,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Exam attempt not found"
+
+
+def test_update_exam_attempt_not_enough_permissions(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    db: Session,
+):
+    user = create_random_user(db)
+
+    exam, question, exam_attempt, answer = create_exam_with_attempt_and_answer(
+        db, owner_id=user.id
+    )
+
+    payload = {"answers": [{"question_id": str(question.id), "response": "hacked"}]}
+
+    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
+        response = client.patch(
+            f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
+            headers=normal_user_token_headers,
+            json=payload,
+        )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Not allowed"

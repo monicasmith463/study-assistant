@@ -190,10 +190,6 @@ def update_exam_attempt(
     db_exam_attempt: ExamAttempt,
     exam_attempt_in: ExamAttemptUpdate,
 ) -> ExamAttempt:
-    # Prevent updates if already locked
-    if db_exam_attempt.is_complete:
-        raise ValueError("Exam attempt is already submitted and cannot be modified.")
-
     # Update attempt-level fields
     if exam_attempt_in.is_complete is not None:
         db_exam_attempt.is_complete = exam_attempt_in.is_complete

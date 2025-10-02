@@ -1,7 +1,18 @@
+import uuid
+
 from sqlmodel import Session
 
 from app import crud
-from app.models import ExamCreate, ExamPublic, QuestionCreate, User
+from app.models import (
+    Answer,
+    Exam,
+    ExamAttempt,
+    ExamCreate,
+    ExamPublic,
+    Question,
+    QuestionCreate,
+    User,
+)
 from app.tests.utils.user import create_random_user
 from app.tests.utils.utils import random_lower_string
 
@@ -41,3 +52,74 @@ def create_random_exam(
 def create_random_exams(db: Session, user: User | None = None) -> list[ExamPublic]:
     user = user or create_random_user(db)
     return [create_random_exam(db, user) for _ in range(3)]
+
+
+def create_exam_with_attempt(
+    db: Session,
+    question_text: str = "What is 2+2?",
+    correct_answer: str = "4",
+    question_type: str = "short_answer",
+) -> tuple[Exam, Question, ExamAttempt]:
+    """
+    Helper to create an exam, a question, and an attempt.
+    Returns (exam, question, attempt).
+    """
+    exam = create_random_exam(db)
+
+    question = Question(
+        question=question_text,
+        answer=correct_answer,
+        type=question_type,
+        exam_id=exam.id,
+    )
+    db.add(question)
+    db.commit()
+    db.refresh(question)
+
+    exam_attempt = ExamAttempt(exam_id=exam.id, owner_id=exam.owner_id)
+    db.add(exam_attempt)
+    db.commit()
+    db.refresh(exam_attempt)
+
+    return exam, question, exam_attempt
+
+
+def create_exam_with_attempt_and_answer(db: Session, owner_id: uuid.UUID):
+    """
+    Helper to create:
+    - an exam owned by `owner_id`
+    - a question for that exam
+    - an exam attempt for that exam & owner
+    - an initial answer for that attempt
+    Returns: (exam, question, exam_attempt, answer)
+    """
+    # Create exam
+    exam = Exam(title="Sample Exam", owner_id=owner_id)
+    db.add(exam)
+    db.commit()
+    db.refresh(exam)
+
+    # Create question
+    question = Question(
+        question="What is 2+2?",
+        answer="4",
+        type="short_answer",
+        exam_id=exam.id,
+    )
+    db.add(question)
+    db.commit()
+    db.refresh(question)
+
+    # Create exam attempt
+    exam_attempt = ExamAttempt(exam_id=exam.id, owner_id=owner_id)
+    db.add(exam_attempt)
+    db.commit()
+    db.refresh(exam_attempt)
+
+    # Add initial answer (wrong for testing)
+    answer = Answer(response="3", attempt_id=exam_attempt.id, question_id=question.id)
+    db.add(answer)
+    db.commit()
+    db.refresh(answer)
+
+    return exam, question, exam_attempt, answer

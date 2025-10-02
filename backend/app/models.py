@@ -189,6 +189,7 @@ class ExamAttemptCreate(ExamAttemptBase):
 
 class ExamAttemptUpdate(SQLModel):
     is_complete: bool | None = None
+    answers: list["AnswerUpdate"] | None = None
 
 
 class AnswerBase(SQLModel):

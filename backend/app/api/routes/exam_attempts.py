@@ -61,6 +61,7 @@ def read_exam_attempt(
 @router.patch("/{attempt_id}", response_model=ExamAttemptPublic)
 def update_exam_attempt(
     *,
+    attempt_id: uuid.UUID,
     session: SessionDep,
     exam_attempt_in: ExamAttemptUpdate,
     current_user: CurrentUser,
@@ -69,13 +70,17 @@ def update_exam_attempt(
     Update an exam attempt with answers.
     If `is_complete=True`, compute the score.
     """
-    exam_attempt = session.get(ExamAttempt, exam_attempt_in.attempt_id)
+    exam_attempt = session.get(ExamAttempt, attempt_id)
     if not exam_attempt:
         raise HTTPException(status_code=404, detail="Exam attempt not found")
 
-    if exam_attempt.user_id != current_user.id:
+    if exam_attempt.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not allowed")
 
+    if exam_attempt.is_complete:
+        raise HTTPException(status_code=409, detail="Exam attempt is already completed")
+
     exam_attempt = crud.update_exam_attempt(
-        session=session, exam_attempt=exam_attempt, exam_attempt_in=exam_attempt_in
+        session=session, db_exam_attempt=exam_attempt, exam_attempt_in=exam_attempt_in
     )
+    return exam_attempt
