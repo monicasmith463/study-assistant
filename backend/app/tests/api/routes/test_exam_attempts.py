@@ -201,7 +201,11 @@ def test_update_exam_attempt_not_found(
     client: TestClient,
     superuser_token_headers: dict[str, str],
 ):
-    payload = {"answers": [{"question_id": str(uuid.uuid4()), "response": "test"}]}
+    payload = {
+        "answers": [
+            {"id": str(uuid.uuid4()), "question_id": str(uuid.uuid4()), "response": "4"}
+        ]
+    }
 
     response = client.patch(
         f"{settings.API_V1_STR}/exam-attempts/{uuid.uuid4()}",
@@ -224,7 +228,11 @@ def test_update_exam_attempt_not_enough_permissions(
         db, owner_id=user.id
     )
 
-    payload = {"answers": [{"question_id": str(question.id), "response": "hacked"}]}
+    payload = {
+        "answers": [
+            {"id": str(uuid.uuid4()), "question_id": str(uuid.uuid4()), "response": "4"}
+        ]
+    }
 
     with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
         response = client.patch(

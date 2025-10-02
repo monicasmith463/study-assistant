@@ -210,4 +210,4 @@ def update_exam_attempt(
     if db_exam_attempt.is_complete:
         score_exam_attempt(session=session, exam_attempt=db_exam_attempt)
 
-    return db_exam_attempt
+    # return ExamAttemptPublic.model_validate(db_exam_attempt)
