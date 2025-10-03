@@ -326,3 +326,11 @@ class QuestionItem(PydanticBaseModel):
 
 class QuestionOutput(PydanticBaseModel):
     questions: list[QuestionItem]
+
+
+# Fix forward references for all Pydantic/SQLModel models
+AnswerUpdate.model_rebuild()
+ExamAttemptUpdate.model_rebuild()
+Answer.model_rebuild()
+ExamAttempt.model_rebuild()
+Question.model_rebuild()
