@@ -192,7 +192,11 @@ def update_exam_attempt(
     session: Session,
     db_exam_attempt: ExamAttempt,
     exam_attempt_in: ExamAttemptUpdate,
-) -> ExamAttempt:
+) -> Any:
+    """
+    Update an exam attempt, including its answers.
+    If `is_complete=True`, compute the score.
+    """
     # Update attempt-level fields
     if exam_attempt_in.is_complete is not None:
         db_exam_attempt.is_complete = exam_attempt_in.is_complete

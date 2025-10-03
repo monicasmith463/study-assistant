@@ -14,7 +14,8 @@ def test_create_exam_attempt_success(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
-):
+) -> None:
+    """Test creating an exam attempt successfully."""
     exam = create_random_exam(db)
 
     with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
@@ -131,7 +132,8 @@ def test_read_exam_attempt_not_enough_permissions(
     assert response.json()["detail"] == "Not enough permissions"
 
 
-def test_update_exam_attempt_success(client: TestClient, db: Session):
+def test_update_exam_attempt_success(client: TestClient, db: Session) -> None:
+    """Test updating an existing exam attempt."""
     user, password = create_random_user_with_password(db)
     login_data = {"username": user.email, "password": password}
     r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
@@ -153,7 +155,8 @@ def test_update_exam_attempt_success(client: TestClient, db: Session):
     assert response.status_code == 200
 
 
-def test_update_exam_attempt_locked(client: TestClient, db: Session):
+def test_update_exam_attempt_locked(client: TestClient, db: Session) -> None:
+    """Test updating a completed exam attempt."""
     # 1️⃣ Create a random user and their token
     user, password = create_random_user_with_password(db)
     login_data = {"username": user.email, "password": password}
@@ -195,7 +198,8 @@ def test_update_exam_attempt_locked(client: TestClient, db: Session):
 def test_update_exam_attempt_not_found(
     client: TestClient,
     superuser_token_headers: dict[str, str],
-):
+) -> None:
+    """Test updating an exam attempt that does not exist."""
     payload = {"answers": [{"id": str(uuid.uuid4()), "response": "4"}]}
 
     response = client.patch(
@@ -212,7 +216,8 @@ def test_update_exam_attempt_not_enough_permissions(
     client: TestClient,
     normal_user_token_headers: dict[str, str],
     db: Session,
-):
+) -> None:
+    """Test that a normal user cannot update another user's exam attempt."""
     user = create_random_user(db)
 
     exam, question, exam_attempt, answer = create_exam_with_attempt_and_answer(

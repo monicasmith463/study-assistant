@@ -65,7 +65,7 @@ def update_exam_attempt(
     session: SessionDep,
     exam_attempt_in: ExamAttemptUpdate,
     current_user: CurrentUser,
-) -> ExamAttemptPublic:
+) -> Any:
     """
     Update an exam attempt with answers.
     If `is_complete=True`, compute the score.

@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from sqlmodel import Session
 
@@ -59,7 +60,7 @@ def create_exam_with_attempt(
     question_text: str = "What is 2+2?",
     correct_answer: str = "4",
     question_type: str = "short_answer",
-) -> tuple[Exam, Question, ExamAttempt]:
+) -> Any:
     """
     Helper to create an exam, a question, and an attempt.
     Returns (exam, question, attempt).
@@ -81,10 +82,10 @@ def create_exam_with_attempt(
     db.commit()
     db.refresh(exam_attempt)
 
-    return exam, question, exam_attempt
+    return [exam, question, exam_attempt]
 
 
-def create_exam_with_attempt_and_answer(db: Session, owner_id: uuid.UUID):
+def create_exam_with_attempt_and_answer(db: Session, owner_id: uuid.UUID) -> Any:
     """
     Helper to create:
     - an exam owned by `owner_id`
