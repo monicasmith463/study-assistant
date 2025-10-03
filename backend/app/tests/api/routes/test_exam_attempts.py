@@ -142,11 +142,7 @@ def test_update_exam_attempt_success(client: TestClient, db: Session):
         db, owner_id=user.id
     )
 
-    payload = {
-        "answers": [
-            {"id": str(answer.id), "response": "4"}
-        ]
-    }
+    payload = {"answers": [{"id": str(answer.id), "response": "4"}]}
     with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
         response = client.patch(
             f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
@@ -179,7 +175,6 @@ def test_update_exam_attempt_locked(client: TestClient, db: Session):
         "answers": [
             {
                 "id": str(answer.id),
-                "question_id": str(question.id),
                 "response": "new answer",
             }
         ]
@@ -201,11 +196,7 @@ def test_update_exam_attempt_not_found(
     client: TestClient,
     superuser_token_headers: dict[str, str],
 ):
-    payload = {
-        "answers": [
-            {"id": str(uuid.uuid4()), "question_id": str(uuid.uuid4()), "response": "4"}
-        ]
-    }
+    payload = {"answers": [{"id": str(uuid.uuid4()), "response": "4"}]}
 
     response = client.patch(
         f"{settings.API_V1_STR}/exam-attempts/{uuid.uuid4()}",
@@ -228,11 +219,7 @@ def test_update_exam_attempt_not_enough_permissions(
         db, owner_id=user.id
     )
 
-    payload = {
-        "answers": [
-            {"id": str(uuid.uuid4()), "question_id": str(uuid.uuid4()), "response": "4"}
-        ]
-    }
+    payload = {"answers": [{"id": str(uuid.uuid4()), "response": "4"}]}
 
     with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
         response = client.patch(
