@@ -326,7 +326,8 @@ class QuestionOutput(PydanticBaseModel):
 
 
 # UPDATE FORWARD REFS (circular dependencies)
-Answer.model_rebuild()
 AnswerUpdate.model_rebuild()
-ExamAttempt.model_rebuild()
 ExamAttemptUpdate.model_rebuild()
+Answer.model_rebuild()
+ExamAttempt.model_rebuild()
+Question.model_rebuild()
