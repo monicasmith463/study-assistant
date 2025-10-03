@@ -133,7 +133,10 @@ class Question(QuestionBase, table=True):
     options: list[str] = Field(default_factory=list, sa_column=Column(JSON))
     exam_id: uuid.UUID = Field(foreign_key="exam.id", nullable=False)
     exam: Exam | None = Relationship(back_populates="questions")
-    answers: list["Answer"] = Relationship(back_populates="question")
+    answers: list["Answer"] = Relationship(
+        back_populates="question",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    )
 
 
 # Define response model for a question
