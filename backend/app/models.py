@@ -154,6 +154,24 @@ class GenerateQuestionsRequest(SQLModel):
     # maybe add difficulty, number of questions, etc.
 
 
+class AnswerBase(SQLModel):
+    response: str
+    is_correct: bool | None = None
+    explanation: str | None = None
+
+
+class AnswerPublic(AnswerBase):
+    id: uuid.UUID
+    question_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+
+class AnswerUpdate(SQLModel):
+    id: uuid.UUID
+    response: str
+
+
 class ExamAttemptBase(SQLModel):
     score: float | None = None
     is_complete: bool = Field(default=False)
@@ -193,24 +211,6 @@ class ExamAttemptCreate(ExamAttemptBase):
 class ExamAttemptUpdate(SQLModel):
     is_complete: bool | None = None
     answers: list["AnswerUpdate"] | None = None
-
-
-class AnswerBase(SQLModel):
-    response: str
-    is_correct: bool | None = None
-    explanation: str | None = None
-
-
-class AnswerPublic(AnswerBase):
-    id: uuid.UUID
-    question_id: uuid.UUID
-    created_at: datetime
-    updated_at: datetime
-
-
-class AnswerUpdate(SQLModel):
-    id: uuid.UUID
-    response: str
 
 
 class Answer(AnswerBase, table=True):
@@ -323,11 +323,3 @@ class QuestionItem(PydanticBaseModel):
 
 class QuestionOutput(PydanticBaseModel):
     questions: list[QuestionItem]
-
-
-# UPDATE FORWARD REFS (circular dependencies)
-AnswerUpdate.model_rebuild()
-ExamAttemptUpdate.model_rebuild()
-Answer.model_rebuild()
-ExamAttempt.model_rebuild()
-Question.model_rebuild()
