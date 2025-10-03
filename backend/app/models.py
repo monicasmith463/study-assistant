@@ -323,3 +323,10 @@ class QuestionItem(PydanticBaseModel):
 
 class QuestionOutput(PydanticBaseModel):
     questions: list[QuestionItem]
+
+
+# UPDATE FORWARD REFS (circular dependencies)
+Answer.model_rebuild()
+AnswerUpdate.model_rebuild()
+ExamAttempt.model_rebuild()
+ExamAttemptUpdate.model_rebuild()
