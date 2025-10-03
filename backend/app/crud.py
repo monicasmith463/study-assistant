@@ -7,7 +7,6 @@ from sqlmodel import Session, select
 from app.core.security import get_password_hash, verify_password
 from app.models import (
     Answer,
-    AnswerPublic,
     AnswerUpdate,
     Document,
     DocumentCreate,
@@ -170,14 +169,16 @@ def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
 
 def update_answers(
     *, session: Session, attempt_id: uuid.UUID, answers_in: list[AnswerUpdate]
-) -> list[AnswerPublic]:
+) -> list[Answer]:
     updated_answers = []
     for answer_in in answers_in:
         answer = session.get(Answer, answer_in.id)
         if not answer:
             raise ValueError(f"Answer {answer_in.id} not found")
         if answer.attempt_id != attempt_id:
-            raise ValueError(f"Answer {answer_in.id} does not belong to exam attempt {attempt_id}")
+            raise ValueError(
+                f"Answer {answer_in.id} does not belong to exam attempt {attempt_id}"
+            )
         answer.response = answer_in.response
         session.add(answer)
         updated_answers.append(answer)
@@ -212,4 +213,4 @@ def update_exam_attempt(
 
     session.commit()
     session.refresh(db_exam_attempt)
-    return db_exam_attempt
+    return ExamAttemptPublic.model_validate(db_exam_attempt)
