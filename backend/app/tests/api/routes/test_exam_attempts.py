@@ -1,5 +1,4 @@
 import uuid
-from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from sqlmodel import Session
@@ -32,12 +31,11 @@ def test_create_exam_attempt_success(
     """Test creating an exam attempt successfully."""
     exam = create_random_exam(db)
 
-    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
-        response = client.post(
-            f"{settings.API_V1_STR}/exam-attempts/",
-            headers=superuser_token_headers,
-            json={"exam_id": str(exam.id)},
-        )
+    response = client.post(
+        f"{settings.API_V1_STR}/exam-attempts/",
+        headers=superuser_token_headers,
+        json={"exam_id": str(exam.id)},
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -71,12 +69,11 @@ def test_create_exam_attempt_not_enough_permissions(
 
     exam = create_random_exam(db)
 
-    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
-        response = client.post(
-            f"{settings.API_V1_STR}/exam-attempts/",
-            headers=normal_user_token_headers,
-            json={"exam_id": str(exam.id)},
-        )
+    response = client.post(
+        f"{settings.API_V1_STR}/exam-attempts/",
+        headers=normal_user_token_headers,
+        json={"exam_id": str(exam.id)},
+    )
 
     assert response.status_code == 403
     assert response.json()["detail"] == "Not enough permissions"
@@ -96,11 +93,10 @@ def test_read_exam_attempt(
     db.commit()
     db.refresh(exam_attempt)
 
-    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
-        response = client.get(
-            f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
-            headers=superuser_token_headers,
-        )
+    response = client.get(
+        f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
+        headers=superuser_token_headers,
+    )
 
     assert response.status_code == 200
     content = response.json()
@@ -159,12 +155,11 @@ def test_update_exam_attempt_success(client: TestClient, db: Session) -> None:
     )
 
     payload = {"answers": [{"id": str(answer.id), "response": "4"}]}
-    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
-        response = client.patch(
-            f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
-            headers=headers,
-            json=payload,
-        )
+    response = client.patch(
+        f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
+        headers=headers,
+        json=payload,
+    )
 
     assert response.status_code == 200
 
@@ -197,12 +192,11 @@ def test_update_exam_attempt_locked(client: TestClient, db: Session) -> None:
         ]
     }
 
-    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
-        response = client.patch(
-            f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
-            headers=headers,
-            json=payload,
-        )
+    response = client.patch(
+        f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
+        headers=headers,
+        json=payload,
+    )
 
     # 4️⃣ Assertions
     assert response.status_code == 409
@@ -240,12 +234,11 @@ def test_update_exam_attempt_not_enough_permissions(
 
     payload = {"answers": [{"id": str(uuid.uuid4()), "response": "4"}]}
 
-    with patch("app.api.routes.exam_attempts.get_exam_by_id", return_value=exam):
-        response = client.patch(
-            f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
-            headers=normal_user_token_headers,
-            json=payload,
-        )
+    response = client.patch(
+        f"{settings.API_V1_STR}/exam-attempts/{exam_attempt.id}",
+        headers=normal_user_token_headers,
+        json=payload,
+    )
 
     assert response.status_code == 403
     assert response.json()["detail"] == "Not allowed"
