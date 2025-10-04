@@ -4,13 +4,24 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-import app.models as models
 from app.core.config import settings
-from app.models import ExamAttempt
+from app.models import (
+    Answer,
+    AnswerUpdate,
+    ExamAttempt,
+    ExamAttemptUpdate,
+    Question,
+)
 from app.tests.utils.exam import create_exam_with_attempt_and_answer, create_random_exam
 from app.tests.utils.user import create_random_user, create_random_user_with_password
 
-_ = models  # prevent "unused import" lint errors
+AnswerUpdate.model_rebuild()
+ExamAttemptUpdate.model_rebuild()
+Answer.model_rebuild()
+ExamAttempt.model_rebuild()
+Question.model_rebuild()
+
+_ = [AnswerUpdate, ExamAttemptUpdate, Answer, ExamAttempt, Question]
 
 
 def test_create_exam_attempt_success(
