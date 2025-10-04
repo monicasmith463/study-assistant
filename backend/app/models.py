@@ -157,6 +157,11 @@ class GenerateQuestionsRequest(SQLModel):
     # maybe add difficulty, number of questions, etc.
 
 
+class ExamAttemptBase(SQLModel):
+    score: float | None = None
+    is_complete: bool = Field(default=False)
+
+
 class AnswerBase(SQLModel):
     response: str
     is_correct: bool | None = None
@@ -175,9 +180,21 @@ class AnswerUpdate(SQLModel):
     response: str
 
 
-class ExamAttemptBase(SQLModel):
-    score: float | None = None
-    is_complete: bool = Field(default=False)
+class ExamAttemptPublic(ExamAttemptBase):
+    id: uuid.UUID
+    exam_id: uuid.UUID
+    completed_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ExamAttemptCreate(ExamAttemptBase):
+    exam_id: uuid.UUID
+
+
+class ExamAttemptUpdate(SQLModel):
+    is_complete: bool | None = None
+    answers: list["AnswerUpdate"] | None = None
 
 
 class ExamAttempt(ExamAttemptBase, table=True):
@@ -197,23 +214,6 @@ class ExamAttempt(ExamAttemptBase, table=True):
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc)},
     )
-
-
-class ExamAttemptPublic(ExamAttemptBase):
-    id: uuid.UUID
-    exam_id: uuid.UUID
-    completed_at: datetime | None = None
-    created_at: datetime
-    updated_at: datetime
-
-
-class ExamAttemptCreate(ExamAttemptBase):
-    exam_id: uuid.UUID
-
-
-class ExamAttemptUpdate(SQLModel):
-    is_complete: bool | None = None
-    answers: list["AnswerUpdate"] | None = None
 
 
 class Answer(AnswerBase, table=True):
