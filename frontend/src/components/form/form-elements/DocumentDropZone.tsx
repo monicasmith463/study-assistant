@@ -3,9 +3,12 @@ import React, { useState } from "react";
 import ComponentCard from "../../common/ComponentCard";
 import { useDropzone } from "react-dropzone";
 import SpinnerButton from "@/components/ui/button/SpinnerButton";
+import { useCreateDocument } from "@/hooks/document";
 
 const DropzoneComponent: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
+  const createDocumentMutation = useCreateDocument();
+
 
   const onDrop = (acceptedFiles: File[]) => {
     setFiles(prev => [...prev, ...acceptedFiles]); // add new files
@@ -17,6 +20,15 @@ const DropzoneComponent: React.FC = () => {
       "application/pdf": [],
     },
   });
+
+  const handleSubmit = () => {
+    if (files.length === 0) return;
+
+    const formData = new FormData();
+    formData.append("file", files[0]);
+
+    createDocumentMutation.mutate({ formData });
+  };
 
   const handleDelete = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
@@ -95,7 +107,7 @@ const DropzoneComponent: React.FC = () => {
         )}
       </div>
       <div className="flex items-center justify-right">
-      <SpinnerButton size="md" variant="primary" disabled={files.length === 0} loading={false} className="flex mt-6 mx-auto">
+      <SpinnerButton size="md" variant="primary" onClick={handleSubmit} disabled={files.length === 0} loading={false} className="flex mt-6 mx-auto">
                 Create Exam!
               </SpinnerButton>
                 </div>
