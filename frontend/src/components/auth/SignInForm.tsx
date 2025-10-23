@@ -29,7 +29,7 @@ export default function SignInForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<FormData>({
     mode: "onChange",
     defaultValues: { email: "", password: "" },
@@ -112,9 +112,8 @@ export default function SignInForm() {
               <SpinnerButton
                 className="w-full"
                 size="sm"
-                type="submit"
-                loading={loginMutation.isLoading}
-                disabled={loginMutation.isLoading}
+                loading={isSubmitting}
+                disabled={isSubmitting}
               >
                 Sign In
               </SpinnerButton>

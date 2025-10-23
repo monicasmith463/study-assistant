@@ -15,6 +15,8 @@ import {
 import { handleError } from "@/utils";
 
 const isLoggedIn = () => {
+  // SSR crash happens without this check
+  if (typeof window === "undefined") return false;
   return localStorage.getItem("access_token") !== null;
 };
 
