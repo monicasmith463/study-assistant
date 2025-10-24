@@ -7,7 +7,7 @@ RUN npm install
 
 COPY . .
 
-ARG VITE_API_URL
+ARG NEXT_PUBLIC_API_URL
 RUN npm run build
 
 EXPOSE 3000
