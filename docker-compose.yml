@@ -148,7 +148,7 @@ services:
     build:
       context: ./frontend
       args:
-        - VITE_API_URL=https://api.${DOMAIN?Variable not set}
+        - NEXT_PUBLIC_API_URL=https://api.${DOMAIN?Variable not set}
         - NODE_ENV=production
     labels:
       - traefik.enable=true
