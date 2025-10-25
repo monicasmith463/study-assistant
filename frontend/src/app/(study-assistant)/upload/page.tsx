@@ -1,4 +1,3 @@
-
 import DocumentDropzoneComponent from "@/components/form/form-elements/DocumentDropZone";
 import { Metadata } from "next";
 
@@ -7,6 +6,6 @@ export const metadata: Metadata = {
   description: "This is Next.js Upload Page",
 };
 
-export default function Upload() {
+export default async function Upload() {
   return <DocumentDropzoneComponent />;
 }

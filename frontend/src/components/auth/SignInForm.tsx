@@ -6,7 +6,7 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import useAuth, { isLoggedIn } from "@/hooks/useAuth";
+import useAuth, { useIsLoggedIn } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
 type FormData = {
@@ -18,13 +18,14 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, resetError } = useAuth();
   const router = useRouter();
+  const isActiveLoggedIn = useIsLoggedIn();
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (isLoggedIn()) {
-      router.push("/");
-    }
-  }, [router]);
+    useEffect(() => {
+      if (isActiveLoggedIn) {
+        router.push("/");
+      }
+    }, [router])
+
 
   const {
     register,

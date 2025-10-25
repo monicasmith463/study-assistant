@@ -6,7 +6,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { namePattern, emailPattern, passwordRules } from "@/utils";
 import { type SubmitHandler, useForm } from "react-hook-form"
-import useAuth, { isLoggedIn } from "@/hooks/useAuth";
+import useAuth, { useIsLoggedIn } from "@/hooks/useAuth";
 import type { UserRegister } from "@/client";
 import SpinnerButton from "../ui/button/SpinnerButton";
 import { useRouter } from "next/navigation";
@@ -25,10 +25,10 @@ export default function SignUpForm() {
 
   const { signUpMutation } = useAuth();
   const router = useRouter();
-
+  const isActiveLoggedIn = useIsLoggedIn();
 
     useEffect(() => {
-      if (isLoggedIn()) {
+      if (isActiveLoggedIn) {
         router.push("/");
       }
     }, [router])
