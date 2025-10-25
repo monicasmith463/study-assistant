@@ -1,3 +1,4 @@
+import logging
 import uuid
 from typing import Any
 
@@ -17,6 +18,7 @@ from app.models import (
 )
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=DocumentPublic)
@@ -28,6 +30,7 @@ def create_document(
     file: UploadFile = File(...),
 ) -> Any:
     key = None
+
     try:
         key = upload_file_to_s3(file, str(current_user.id))
     except Exception as e:
@@ -37,14 +40,18 @@ def create_document(
         url = generate_s3_url(key)
     except Exception:
         raise HTTPException(500, f"Could not generate URL for file key: {key}")
-
-    document_in = DocumentCreate(
-        filename=file.filename,
-        content_type=file.content_type,
-        size=file.size,
-        s3_url=url,
-        s3_key=key,
-    )
+    try:
+        document_in = DocumentCreate(
+            filename=file.filename,
+            content_type=file.content_type,
+            size=file.size,
+            s3_url=url,
+            s3_key=key,
+        )
+    except Exception:
+        logging.exception(
+            "Validation error: {e} Failed to create DocumentCreate instance. file: {file.filename}, content_type: {file.content_type}, size: {file.size}, s3_url: {url}, s3_key: {key}"
+        )
 
     document = Document.model_validate(
         document_in, update={"owner_id": current_user.id}
