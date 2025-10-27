@@ -18,6 +18,8 @@ from app.models import (
 )
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -48,18 +50,18 @@ def create_document(
             s3_url=url,
             s3_key=key,
         )
+        document = Document.model_validate(
+            document_in, update={"owner_id": current_user.id}
+        )
+
+        session.add(document)
+        session.commit()
+        session.refresh(document)
+
     except Exception:
         logging.exception(
             "Validation error: {e} Failed to create DocumentCreate instance. file: {file.filename}, content_type: {file.content_type}, size: {file.size}, s3_url: {url}, s3_key: {key}"
         )
-
-    document = Document.model_validate(
-        document_in, update={"owner_id": current_user.id}
-    )
-
-    session.add(document)
-    session.commit()
-    session.refresh(document)
 
     # 3. Kick off background job
     background_tasks.add_task(extract_text_and_save_to_db, key, str(document.id))

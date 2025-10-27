@@ -4,7 +4,8 @@ import ComponentCard from "../../common/ComponentCard";
 import { useDropzone } from "react-dropzone";
 import SpinnerButton from "@/components/ui/button/SpinnerButton";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DocumentsService } from "@/client";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const DropzoneComponent: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
@@ -22,23 +23,34 @@ const DropzoneComponent: React.FC = () => {
     },
   });
 
-  // Mutation for uploading a document
   const createDocumentMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      return DocumentsService.createDocument({ formData });
+
+      const token = localStorage.getItem("access_token");
+
+      fetch(`${ API_URL }/api/v1/documents/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token || ""}`,
+        },
+        body: formData,
+      })
+        .then(res => res.json())
+        .then(console.log)
+        .catch(console.error);
     },
     onSuccess: () => {
       console.log("Document uploaded successfully!");
-      setFiles([]); // clear selected files
-      queryClient.invalidateQueries(["documents"]); // refresh documents list if you have one
+      setFiles([]);
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
     onError: (err: any) => {
       console.error(err);
-      console.log("Failed to upload document.");
     },
   });
+
 
   const handleSubmit = () => {
     if (files.length === 0) return;
@@ -55,11 +67,10 @@ const DropzoneComponent: React.FC = () => {
         <div className="transition border border-gray-300 border-dashed cursor-pointer rounded-xl hover:border-brand-500 dark:border-gray-700 dark:hover:border-brand-500">
           <form
             {...getRootProps()}
-            className={`dropzone rounded-xl border-dashed border-gray-300 p-7 lg:p-10 ${
-              isDragActive
+            className={`dropzone rounded-xl border-dashed border-gray-300 p-7 lg:p-10 ${isDragActive
                 ? "border-brand-500 bg-gray-100 dark:bg-gray-800"
                 : "border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
-            }`}
+              }`}
           >
             <input {...getInputProps()} />
             <div className="dz-message flex flex-col items-center m-0">
