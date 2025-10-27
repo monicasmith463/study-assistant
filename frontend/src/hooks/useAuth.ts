@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   type Body_login_login_access_token as AccessToken,
@@ -14,10 +14,15 @@ import {
 } from "@/client";
 import { handleError } from "@/utils";
 
-const isLoggedIn = () => {
-  // SSR crash happens without this check
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem("access_token") !== null;
+
+const useIsLoggedIn = () => {
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    setLoggedIn(token !== null);
+  }, []);
+
+  return loggedIn;
 };
 
 const useAuth = () => {
@@ -28,7 +33,7 @@ const useAuth = () => {
   const { data: user } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
-    enabled: isLoggedIn(),
+    enabled: useIsLoggedIn,
   });
 
   const signUpMutation = useMutation({
@@ -81,5 +86,5 @@ const useAuth = () => {
   };
 };
 
-export { isLoggedIn };
+export { useIsLoggedIn };
 export default useAuth;
