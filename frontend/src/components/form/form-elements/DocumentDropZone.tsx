@@ -9,6 +9,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const DropzoneComponent: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
   // Dropzone logic
@@ -25,6 +26,7 @@ const DropzoneComponent: React.FC = () => {
 
   const createDocumentMutation = useMutation({
     mutationFn: async (file: File) => {
+      setLoading(true);
       const formData = new FormData();
       formData.append("file", file);
 
@@ -43,6 +45,7 @@ const DropzoneComponent: React.FC = () => {
     },
     onSuccess: () => {
       console.log("Document uploaded successfully!");
+      setLoading(false);
       setFiles([]);
       queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
@@ -113,8 +116,8 @@ const DropzoneComponent: React.FC = () => {
             size="md"
             variant="primary"
             onClick={handleSubmit}
-            disabled={files.length === 0 || createDocumentMutation.isLoading}
-            loading={createDocumentMutation.isLoading}
+            disabled={files.length === 0 || loading}
+            loading={loading}
           >
             Upload Document
           </SpinnerButton>
