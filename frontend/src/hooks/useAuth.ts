@@ -33,7 +33,7 @@ const useAuth = () => {
   const { data: user } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
-    enabled: useIsLoggedIn(),
+    enabled: useIsLoggedIn,
   });
 
   const signUpMutation = useMutation({

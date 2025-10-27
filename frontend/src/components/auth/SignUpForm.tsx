@@ -31,7 +31,7 @@ export default function SignUpForm() {
       if (isActiveLoggedIn) {
         router.push("/");
       }
-    }, [router])
+    }, [router, isActiveLoggedIn])
 
 
   const {

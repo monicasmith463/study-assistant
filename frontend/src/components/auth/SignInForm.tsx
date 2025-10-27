@@ -24,7 +24,7 @@ export default function SignInForm() {
       if (isActiveLoggedIn) {
         router.push("/");
       }
-    }, [router])
+    }, [router, isActiveLoggedIn])
 
 
   const {

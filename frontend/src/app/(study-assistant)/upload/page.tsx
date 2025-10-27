@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   description: "This is Next.js Upload Page",
 };
 
-export default async function Upload() {
+export default function Upload() {
   return <DocumentDropzoneComponent />;
 }
