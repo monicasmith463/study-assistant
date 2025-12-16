@@ -17,6 +17,7 @@ import { handleError } from "@/utils";
 
 const useIsLoggedIn = () => {
   const [loggedIn, setLoggedIn] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     setLoggedIn(token !== null);
@@ -30,10 +31,12 @@ const useAuth = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  const isLoggedIn = useIsLoggedIn();
+
   const { data: user } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
-    enabled: useIsLoggedIn,
+    enabled: isLoggedIn,
   });
 
   const signUpMutation = useMutation({
