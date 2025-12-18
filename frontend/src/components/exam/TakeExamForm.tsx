@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 
 import Button from "../ui/button/Button";
@@ -24,13 +24,11 @@ export default function TakeExamForm() {
 
   const {
     handleSubmit,
-    watch,
-    setValue,
-    formState: { isSubmitting },
+    control,
+    formState: { isSubmitting, errors },
   } = useForm<ExamFormData>({
-    defaultValues: {
-      answers: {},
-    },
+    defaultValues: { answers: {} },
+    mode: "onSubmit",
   });
 
   /* -------------------- Fetch Exam -------------------- */
@@ -41,9 +39,7 @@ export default function TakeExamForm() {
       const token = localStorage.getItem("access_token");
 
       const res = await fetch(`${API_URL}/api/v1/exams/${examId}`, {
-        headers: {
-          Authorization: `Bearer ${token || ""}`,
-        },
+        headers: { Authorization: `Bearer ${token || ""}` },
       });
 
       if (!res.ok) {
@@ -60,72 +56,63 @@ export default function TakeExamForm() {
       examId,
       answers: data.answers,
     });
-
-    // later:
-    // submitExamAttemptMutation.mutate(...)
   };
 
   /* -------------------- States -------------------- */
-  if (!examId) {
-    return <div>Invalid exam</div>;
-  }
-
-  if (examQuery.isLoading) {
-    return <div>Loading exam...</div>;
-  }
-
-  if (examQuery.isError) {
-    return <div>Failed to load exam</div>;
-  }
+  if (!examId) return <div>Invalid exam</div>;
+  if (examQuery.isLoading) return <div>Loading exam...</div>;
+  if (examQuery.isError) return <div>Failed to load exam</div>;
 
   const exam = examQuery.data;
-  const answers = watch("answers");
 
   /* -------------------- Render -------------------- */
   return (
     <ComponentCard title={exam?.title ?? "Exam"}>
       <Form onSubmit={handleSubmit(onSubmit)}>
-      <div className="grid grid-cols-1 gap-6">
-  {exam?.questions?.map((q: QuestionPublic) => (
-    <div key={q.id} className="col-span-full">
-      <p className="mb-2 font-medium text-gray-800">
-        {q.question}
-      </p>
+        <div className="grid grid-cols-1 gap-6">
+          {exam?.questions?.map((q: QuestionPublic) => {
+            const isRadio =
+              q.type === "multiple_choice" || q.type === "true_false";
 
-      {q.type === "multiple_choice" && q.options && (
-        <ListWithRadio
-        name={q.id}
-  options={q.options}
-  value={answers?.[q.id]}
-  onChange={(value: string) =>
-    setValue(`answers.${q.id}`, value, { shouldDirty: true })
-  }
-/>
-      )}
-      {q.type === "true_false" && (
-        <ListWithRadio
-        name={q.id}
-  options={["True", "False"]}
-  value={answers?.[q.id]}
-  onChange={(value: string) =>
-    setValue(`answers.${q.id}`, value, { shouldDirty: true })
-  }
-/>
-      )}
+            if (!isRadio) return null;
 
-    </div>
-  ))}
+            const options =
+              q.type === "true_false" ? ["True", "False"] : q.options ?? [];
 
-  <div className="col-span-full">
-    <Button
-      className="w-full"
-      size="sm"
-      disabled={isSubmitting}
-    >
-      Submit Exam
-    </Button>
-  </div>
-</div>
+            return (
+              <div key={q.id} className="col-span-full">
+                <p className="mb-2 font-medium text-gray-800">
+                  {q.question}
+                </p>
+
+                <Controller
+                  name={`answers.${q.id}`}
+                  control={control}
+                  rules={{ required: "Please select an option." }}
+                  render={({ field }) => (
+                    <ListWithRadio
+                      name={q.id}
+                      options={options}
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={errors.answers?.[q.id]?.message}
+                    />
+                  )}
+                />
+              </div>
+            );
+          })}
+
+          <div className="col-span-full">
+            <Button
+              className="w-full"
+              size="sm"
+              disabled={isSubmitting}
+            >
+              Submit Exam
+            </Button>
+          </div>
+        </div>
       </Form>
     </ComponentCard>
   );
