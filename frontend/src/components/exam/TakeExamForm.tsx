@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import Button from "../ui/button/Button";
 import Form from "../form/Form";
@@ -11,7 +11,8 @@ import { useMutation } from "@tanstack/react-query";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function TakeExamForm() {
-  const { examId } = useParams<{ examId: string }>();
+  const searchParams = useSearchParams();
+  const examId = searchParams.get("exam_id");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
