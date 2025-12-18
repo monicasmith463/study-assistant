@@ -1,18 +1,25 @@
 "use client";
+
 import React, { useState } from "react";
 import ComponentCard from "../../common/ComponentCard";
 import { useDropzone } from "react-dropzone";
 import SpinnerButton from "@/components/ui/button/SpinnerButton";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { ArrowUpIcon, PencilIcon } from "@/icons";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const DropzoneComponent: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-  const queryClient = useQueryClient();
+  const [documentId, setDocumentId] = useState<string | null>(null);
 
-  // Dropzone logic
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  /* -------------------- Dropzone -------------------- */
   const onDrop = (acceptedFiles: File[]) => {
     setFiles(prev => [...prev, ...acceptedFiles]);
   };
@@ -24,56 +31,108 @@ const DropzoneComponent: React.FC = () => {
     },
   });
 
+  /* -------------------- Upload Document -------------------- */
   const createDocumentMutation = useMutation({
     mutationFn: async (file: File) => {
       setLoading(true);
+
       const formData = new FormData();
       formData.append("file", file);
 
       const token = localStorage.getItem("access_token");
 
-      fetch(`${ API_URL }/api/v1/documents/`, {
+      const res = await fetch(`${API_URL}/api/v1/documents/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token || ""}`,
         },
         body: formData,
-      })
-        .then(res => res.json())
-        .then(console.log)
-        .catch(console.error);
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to upload document");
+      }
+
+      return res.json(); // must return
     },
-    onSuccess: () => {
-      console.log("Document uploaded successfully!");
-      setLoading(false);
+
+    onSuccess: (data) => {
+      setDocumentId(data.id);
       setFiles([]);
+      setLoading(false);
       queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
-    onError: (err: any) => {
-      console.error(err);
+
+    onError: (err: unknown) => {
+      console.error("Upload failed:", err);
+      setLoading(false);
     },
   });
 
-
-  const handleSubmit = () => {
+  const handleUpload = () => {
     if (files.length === 0) return;
     createDocumentMutation.mutate(files[0]);
   };
 
+  /* -------------------- Generate Exam -------------------- */
+  const generateExamMutation = useMutation({
+    mutationFn: async () => {
+      if (!documentId) {
+        throw new Error("No document ID");
+      }
+
+      setLoading(true);
+
+      const token = localStorage.getItem("access_token");
+
+      const res = await fetch(`${API_URL}/api/v1/exams/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token || ""}`,
+        },
+        body: JSON.stringify({
+          document_ids: [documentId],
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to generate exam");
+      }
+
+      return res.json(); // expects { exam_id }
+    },
+
+    onSuccess: (data) => {
+      console.log("data", data)
+      setLoading(false);
+      router.push(`/exams/${data.exam_id}/take`);
+    },
+
+    onError: (err: unknown) => {
+      console.error("Generate exam failed:", err);
+      setLoading(false);
+    },
+  });
+
+  /* -------------------- Remove file -------------------- */
   const handleDelete = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  /* -------------------- Render -------------------- */
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full mx-auto">
       <ComponentCard title="Upload Documents">
+        {/* Dropzone */}
         <div className="transition border border-gray-300 border-dashed cursor-pointer rounded-xl hover:border-brand-500 dark:border-gray-700 dark:hover:border-brand-500">
           <form
             {...getRootProps()}
-            className={`dropzone rounded-xl border-dashed border-gray-300 p-7 lg:p-10 ${isDragActive
+            className={`dropzone rounded-xl border-dashed border-gray-300 p-7 lg:p-10 ${
+              isDragActive
                 ? "border-brand-500 bg-gray-100 dark:bg-gray-800"
                 : "border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
-              }`}
+            }`}
           >
             <input {...getInputProps()} />
             <div className="dz-message flex flex-col items-center m-0">
@@ -111,17 +170,31 @@ const DropzoneComponent: React.FC = () => {
           </ul>
         )}
 
-        <div className="flex items-center justify-center mt-6">
-          <SpinnerButton
-            size="md"
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={files.length === 0 || loading}
-            loading={loading}
-          >
-            Upload Document
-          </SpinnerButton>
-        </div>
+<div className="flex items-center justify-center mt-6 gap-4">
+  <SpinnerButton
+    size="sm"
+    variant="secondary"
+    startIcon={<ArrowUpIcon />}
+    onClick={handleUpload}
+    disabled={files.length === 0 || loading}
+    loading={loading}
+  >
+    Upload Document
+  </SpinnerButton>
+
+  {documentId && (
+    <SpinnerButton
+      size="md"
+      variant="primary"
+      startIcon={<PencilIcon />}
+      onClick={() => generateExamMutation.mutate()}
+      disabled={loading}
+      loading={loading}
+    >
+      Generate Exam
+    </SpinnerButton>
+  )}
+</div>
       </ComponentCard>
     </div>
   );
