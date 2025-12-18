@@ -736,7 +736,7 @@ export const QuestionPublicSchema = {
 
 export const QuestionTypeSchema = {
     type: 'string',
-    enum: ['multiple_choice', 'true_false', 'short_answer'],
+    enum: ['multiple_choice', 'true_false'],
     title: 'QuestionType'
 } as const;
 
