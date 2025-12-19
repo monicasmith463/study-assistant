@@ -59,7 +59,7 @@ def create_exam_with_attempt(
     db: Session,
     question_text: str = "What is 2+2?",
     correct_answer: str = "4",
-    question_type: str = "short_answer",
+    question_type: str = "multiple_choice",
 ) -> Any:
     """
     Helper to create an exam, a question, and an attempt.
@@ -104,7 +104,7 @@ def create_exam_with_attempt_and_answer(db: Session, owner_id: uuid.UUID) -> Any
     question = Question(
         question="What is 2+2?",
         answer="4",
-        type="short_answer",
+        type="multiple_choice",
         exam_id=exam.id,
     )
     db.add(question)

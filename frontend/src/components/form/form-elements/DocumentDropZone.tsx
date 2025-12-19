@@ -53,7 +53,7 @@ const DropzoneComponent: React.FC = () => {
         throw new Error("Failed to upload document");
       }
 
-      return res.json(); // must return
+      return res.json();
     },
 
     onSuccess: (data) => {
@@ -106,7 +106,7 @@ const DropzoneComponent: React.FC = () => {
     onSuccess: (data) => {
       console.log("data", data)
       setLoading(false);
-      router.push(`/exams/${data.exam_id}/take`);
+      router.push(`/take-exam?exam_id=${data.id}`);
     },
 
     onError: (err: unknown) => {
