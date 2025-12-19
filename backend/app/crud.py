@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
@@ -28,10 +29,13 @@ from app.models import (
     UserUpdate,
 )
 
+# -------------------- Users --------------------
+
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
     db_obj = User.model_validate(
-        user_create, update={"hashed_password": get_password_hash(user_create.password)}
+        user_create,
+        update={"hashed_password": get_password_hash(user_create.password)},
     )
     session.add(db_obj)
     session.commit()
@@ -43,9 +47,7 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
     user_data = user_in.model_dump(exclude_unset=True)
     extra_data = {}
     if "password" in user_data:
-        password = user_data["password"]
-        hashed_password = get_password_hash(password)
-        extra_data["hashed_password"] = hashed_password
+        extra_data["hashed_password"] = get_password_hash(user_data["password"])
     db_user.sqlmodel_update(user_data, update=extra_data)
     session.add(db_user)
     session.commit()
@@ -54,18 +56,17 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
-    statement = select(User).where(User.email == email)
-    session_user = session.exec(statement).first()
-    return session_user
+    return session.exec(select(User).where(User.email == email)).first()
 
 
 def authenticate(*, session: Session, email: str, password: str) -> User | None:
-    db_user = get_user_by_email(session=session, email=email)
-    if not db_user:
+    user = get_user_by_email(session=session, email=email)
+    if not user or not verify_password(password, user.hashed_password):
         return None
-    if not verify_password(password, db_user.hashed_password):
-        return None
-    return db_user
+    return user
+
+
+# -------------------- Items --------------------
 
 
 def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -> Item:
@@ -76,7 +77,9 @@ def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -
     return db_item
 
 
-# --- Document ---
+# -------------------- Documents --------------------
+
+
 def create_document(
     *,
     session: Session,
@@ -84,16 +87,17 @@ def create_document(
     owner_id: UUID,
     extracted_text: str | None = None,
 ) -> DocumentPublic:
-    # Validate input and attach owner_id
-    update: dict[str, str] = {"owner_id": str(owner_id)}
+    update = {"owner_id": str(owner_id)}
     if extracted_text is not None:
         update["extracted_text"] = extracted_text
     db_document = Document.model_validate(document_in, update=update)
     session.add(db_document)
     session.commit()
     session.refresh(db_document)
-    # Return Public model for API
     return DocumentPublic.model_validate(db_document)
+
+
+# -------------------- Exams --------------------
 
 
 def create_question(
@@ -129,92 +133,63 @@ def create_db_exam(*, session: Session, exam_in: ExamCreate, owner_id: UUID) -> 
 def create_exam(
     *, session: Session, db_exam: Exam, questions: list[QuestionCreate]
 ) -> ExamPublic:
-    for question in questions:
-        create_question(session=session, question_in=question, exam_id=db_exam.id)
-
+    for q in questions:
+        create_question(session=session, question_in=q, exam_id=db_exam.id)
     session.refresh(db_exam, attribute_names=["questions"])
     return ExamPublic.model_validate(db_exam)
 
 
+# -------------------- Exam Attempts --------------------
+
+
 def create_exam_attempt(
-    *, session: Session, exam_in: ExamAttemptCreate, user_id: UUID
-) -> ExamAttemptPublic:
-    exam_attempt = ExamAttempt(**exam_in.model_dump(), owner_id=user_id)
+    *,
+    session: Session,
+    exam_in: ExamAttemptCreate,
+    user_id: UUID,
+) -> ExamAttempt:
+    exam_attempt = ExamAttempt(
+        exam_id=exam_in.exam_id,
+        owner_id=user_id,
+        is_complete=False,
+    )
     session.add(exam_attempt)
     session.commit()
     session.refresh(exam_attempt)
 
-    # Fetch questions for this exam
+    # Pre-create answers
     questions = session.exec(
         select(Question).where(Question.exam_id == exam_attempt.exam_id)
     ).all()
 
-    # Create empty answers (response can be "" or None depending on your schema)
     for q in questions:
         session.add(
             Answer(
                 attempt_id=exam_attempt.id,
                 question_id=q.id,
-                response="",  # or response="" if required
+                response="",
             )
         )
 
     session.commit()
-
-    # Reload relationships so API returns attempt.answers
     session.refresh(exam_attempt, attribute_names=["answers", "exam"])
-    return ExamAttemptPublic.model_validate(exam_attempt)
-
-
-def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
-    """
-    Compute score for an exam attempt and update each answer's is_correct.
-    Returns the total score as a float.
-    """
-    total_questions = len(exam_attempt.answers)
-    correct_count = 0
-
-    for answer in exam_attempt.answers:
-        question = answer.question
-        if not question.answer:
-            continue
-
-        if not answer.response:
-            answer.is_correct = False
-            session.add(answer)
-            continue
-
-        is_correct = answer.response.strip().lower() == question.answer.strip().lower()
-
-        answer.is_correct = is_correct
-        session.add(answer)
-
-        if is_correct:
-            correct_count += 1
-
-    # Compute score as percentage
-    score = (correct_count / total_questions) * 100 if total_questions else 0
-    exam_attempt.score = score
-    session.add(exam_attempt)
-    session.commit()
-    session.refresh(exam_attempt)
-
-    return score
+    return exam_attempt
 
 
 def update_answers(
-    *, session: Session, attempt_id: uuid.UUID, answers_in: list[AnswerUpdate]
+    *,
+    session: Session,
+    attempt_id: UUID,
+    answers_in: list[AnswerUpdate],
 ) -> list[Answer]:
-    updated_answers: list[Answer] = []
+    updated: list[Answer] = []
 
     for answer_in in answers_in:
         answer: Answer | None = None
 
-        # ✅ Path A: update by Answer.id (your tests)
         if answer_in.id is not None:
             answer = session.get(Answer, answer_in.id)
 
-        # ✅ Path B: update by Question.id (your frontend)
         if answer is None and answer_in.question_id is not None:
             answer = session.exec(
                 select(Answer).where(
@@ -224,17 +199,76 @@ def update_answers(
             ).first()
 
         if answer is None:
-            raise ValueError("Answer not found for update")
+            raise ValueError("Answer not found")
 
         if answer.attempt_id != attempt_id:
-            raise ValueError("Answer does not belong to this attempt")
+            raise ValueError("Answer does not belong to attempt")
 
         answer.response = answer_in.response
         session.add(answer)
-        updated_answers.append(answer)
+        updated.append(answer)
 
     session.commit()
-    return updated_answers
+    return updated
+
+
+def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
+    total_questions = len(exam_attempt.answers)
+    correct_count = 0
+
+    for answer in exam_attempt.answers:
+        question = answer.question
+
+        # Skip if no correct answer key
+        if not question.correct_answer:
+            answer.is_correct = False
+            session.add(answer)
+            continue
+
+        if not answer.response:
+            answer.is_correct = False
+            session.add(answer)
+            continue
+
+        is_correct = (
+            answer.response.strip().lower() == question.correct_answer.strip().lower()
+        )
+
+        answer.is_correct = is_correct
+        session.add(answer)
+
+        if is_correct:
+            correct_count += 1
+
+    score = (correct_count / total_questions) * 100 if total_questions else 0
+    exam_attempt.score = score
+    session.add(exam_attempt)
+    session.commit()
+    session.refresh(exam_attempt)
+
+    return score
+
+
+def finalize_exam_attempt(
+    *,
+    session: Session,
+    exam_attempt: ExamAttempt,
+) -> ExamAttempt:
+    if exam_attempt.is_complete:
+        return exam_attempt
+
+    exam_attempt.is_complete = True
+    exam_attempt.completed_at = datetime.now(timezone.utc)
+    session.add(exam_attempt)
+    session.commit()
+
+    session.refresh(exam_attempt, attribute_names=["answers"])
+    for ans in exam_attempt.answers:
+        session.refresh(ans, attribute_names=["question"])
+
+    score_exam_attempt(session=session, exam_attempt=exam_attempt)
+    session.refresh(exam_attempt)
+    return exam_attempt
 
 
 def update_exam_attempt(
@@ -242,16 +276,7 @@ def update_exam_attempt(
     session: Session,
     db_exam_attempt: ExamAttempt,
     exam_attempt_in: ExamAttemptUpdate,
-) -> Any:
-    """
-    Update an exam attempt, including its answers.
-    If `is_complete=True`, compute the score.
-    """
-    # Update attempt-level fields
-    if exam_attempt_in.is_complete is not None:
-        db_exam_attempt.is_complete = exam_attempt_in.is_complete
-
-    # Delegate answers
+) -> ExamAttemptPublic:
     if exam_attempt_in.answers:
         update_answers(
             session=session,
@@ -259,12 +284,11 @@ def update_exam_attempt(
             answers_in=exam_attempt_in.answers,
         )
 
-    session.add(db_exam_attempt)
+    if exam_attempt_in.is_complete:
+        db_exam_attempt = finalize_exam_attempt(
+            session=session,
+            exam_attempt=db_exam_attempt,
+        )
 
-    # Score if exam is submitted - do this before commit
-    if db_exam_attempt.is_complete:
-        score_exam_attempt(session=session, exam_attempt=db_exam_attempt)
-
-    session.commit()
     session.refresh(db_exam_attempt)
     return ExamAttemptPublic.model_validate(db_exam_attempt)

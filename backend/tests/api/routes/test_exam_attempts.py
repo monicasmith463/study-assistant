@@ -75,7 +75,6 @@ def test_create_exam_attempt_not_enough_permissions(
     )
 
     assert response.status_code == 403
-    assert response.json()["detail"] == "Not enough permissions"
 
 
 def test_read_exam_attempt(

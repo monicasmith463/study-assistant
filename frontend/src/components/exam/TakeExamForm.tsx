@@ -11,7 +11,7 @@ import ComponentCard from "../common/ComponentCard";
 
 import type { ExamPublic, QuestionPublic } from "@/client";
 import ListWithRadio from "../ui/list/ListWithRadio";
-import { submitExamAttempt } from "@/api/examAttempts";
+import { createExamAttempt } from "@/api/examAttempts";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -60,7 +60,7 @@ export default function TakeExamForm() {
   /* -------------------- Submit Exam -------------------- */
   const submitExamMutation = useMutation({
     mutationFn: (payload: SubmitExamPayload) =>
-      submitExamAttempt(payload.exam_id, payload.answers),
+      createExamAttempt(payload.exam_id, payload.answers),
 
     onSuccess: (attempt) => {
       router.push(`/score-exam?attempt_id=${attempt.id}`);

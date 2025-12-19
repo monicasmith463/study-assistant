@@ -138,17 +138,19 @@ class QuestionType(str, Enum):
 
 class QuestionBase(SQLModel):
     question: str = Field(sa_column=Column(Text, nullable=False))
-    # TODO: Get the answer from generated questions for test grading
-    answer: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+
+    type: QuestionType = Field(sa_column=Column(SAEnum(QuestionType), nullable=False))
+
+    options: list[str] = Field(sa_column=Column(JSON, nullable=False))
+
+    # correct answer (used for grading)
+    correct_answer: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
 
 
 class Question(QuestionBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    type: QuestionType = Field(
-        default=QuestionType.MULTIPLE_CHOICE,
-        sa_column=Column(SAEnum(QuestionType), nullable=False),
-    )
-    options: list[str] = Field(default_factory=list, sa_column=Column(JSON))
     exam_id: uuid.UUID = Field(foreign_key="exam.id", nullable=False)
     exam: Exam | None = Relationship(back_populates="questions")
     answers: list["Answer"] = Relationship(
@@ -161,7 +163,6 @@ class Question(QuestionBase, table=True):
 class QuestionPublic(QuestionBase):
     id: uuid.UUID
     type: QuestionType
-    options: list[str] = []  # optional, only for multiple choice
 
 
 # Properties to receive on document creation

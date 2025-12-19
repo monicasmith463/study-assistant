@@ -46,7 +46,7 @@ def create_exam_attempt(
         exam_in=ExamAttemptCreate(exam_id=exam_in.exam_id),
     )
 
-    # 3️⃣ Update answers if provided
+    # 3️⃣ Update answers (optional)
     if exam_in.answers:
         crud.update_answers(
             session=session,
@@ -54,12 +54,11 @@ def create_exam_attempt(
             answers_in=exam_in.answers,
         )
 
-    # 4️⃣ Complete + score
+    # 4️⃣ Finalize + score (optional)
     if exam_in.is_complete:
-        exam_attempt = crud.update_exam_attempt(
+        exam_attempt = crud.finalize_exam_attempt(
             session=session,
-            db_exam_attempt=exam_attempt,
-            exam_attempt_in=ExamAttemptUpdate(is_complete=True),
+            exam_attempt=exam_attempt,
         )
 
     return exam_attempt
