@@ -2,16 +2,6 @@
 
 export const AnswerPublicSchema = {
     properties: {
-        id: {
-            type: 'string',
-            format: 'uuid',
-            title: 'Id'
-        },
-        question_id: {
-            type: 'string',
-            format: 'uuid',
-            title: 'Question Id'
-        },
         response: {
             type: 'string',
             title: 'Response'
@@ -26,10 +16,41 @@ export const AnswerPublicSchema = {
                 }
             ],
             title: 'Is Correct'
+        },
+        explanation: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Explanation'
+        },
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        question_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Question Id'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
         }
     },
     type: 'object',
-    required: ['id', 'question_id', 'response'],
+    required: ['response', 'id', 'question_id', 'created_at', 'updated_at'],
     title: 'AnswerPublic'
 } as const;
 
