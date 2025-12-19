@@ -11,7 +11,6 @@ from app.models import (
     ExamAttempt,
     ExamAttemptCreate,
     ExamAttemptPublic,
-    ExamAttemptUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -77,33 +76,4 @@ def read_exam_attempt(
     if not current_user.is_superuser and (exam_attempt.owner_id != current_user.id):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    return exam_attempt
-
-
-@router.patch("/{attempt_id}", response_model=ExamAttemptPublic)
-def update_exam_attempt(
-    *,
-    attempt_id: uuid.UUID,
-    session: SessionDep,
-    exam_attempt_in: ExamAttemptUpdate,
-    current_user: CurrentUser,
-) -> Any:
-    """
-    Update an exam attempt with answers.
-    If `is_complete=True`, compute the score.
-    """
-    exam_attempt = session.get(ExamAttempt, attempt_id)
-    if not exam_attempt:
-        logger.warning("Exam attempt %s not found", attempt_id)
-        raise HTTPException(status_code=404, detail="Exam attempt not found")
-
-    if not current_user.is_superuser and exam_attempt.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not allowed")
-
-    if exam_attempt.is_complete:
-        raise HTTPException(status_code=409, detail="Exam attempt is already completed")
-
-    exam_attempt = crud.update_exam_attempt(
-        session=session, db_exam_attempt=exam_attempt, exam_attempt_in=exam_attempt_in
-    )
     return exam_attempt
