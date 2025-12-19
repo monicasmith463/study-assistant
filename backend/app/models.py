@@ -186,11 +186,11 @@ class AnswerBase(SQLModel):
     explanation: str | None = None
 
 
-class AnswerPublic(AnswerBase):
+class AnswerPublic(SQLModel):
     id: uuid.UUID
     question_id: uuid.UUID
-    created_at: datetime
-    updated_at: datetime
+    response: str
+    is_correct: bool | None = None
 
 
 class AnswerUpdate(SQLModel):
@@ -201,9 +201,12 @@ class AnswerUpdate(SQLModel):
 class ExamAttemptPublic(ExamAttemptBase):
     id: uuid.UUID
     exam_id: uuid.UUID
-    completed_at: datetime | None = None
+    completed_at: datetime | None
     created_at: datetime
     updated_at: datetime
+
+    exam: ExamPublic | None
+    answers: list[AnswerPublic]
 
 
 class ExamAttemptCreate(ExamAttemptBase):
