@@ -155,12 +155,17 @@ def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
     correct_count = 0
 
     for answer in exam_attempt.answers:
-        question = answer.question  # relationship
+        question = answer.question
         if not question.answer:
-            continue  # skip if no answer key
+            continue
 
-        # Mark whether answer is correct
+        if not answer.response:
+            answer.is_correct = False
+            session.add(answer)
+            continue
+
         is_correct = answer.response.strip().lower() == question.answer.strip().lower()
+
         answer.is_correct = is_correct
         session.add(answer)
 
