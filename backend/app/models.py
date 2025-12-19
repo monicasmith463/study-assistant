@@ -134,6 +134,7 @@ class ExamUpdate(SQLModel):
 class QuestionType(str, Enum):
     MULTIPLE_CHOICE = "multiple_choice"
     TRUE_FALSE = "true_false"
+    SHORT_ANSWER = "short_answer"
 
 
 class QuestionBase(SQLModel):
@@ -145,7 +146,7 @@ class QuestionBase(SQLModel):
 class Question(QuestionBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     type: QuestionType = Field(
-        default=QuestionType.MULTIPLE_CHOICE,
+        default=QuestionType.SHORT_ANSWER,
         sa_column=Column(SAEnum(QuestionType), nullable=False),
     )
     options: list[str] = Field(default_factory=list, sa_column=Column(JSON))

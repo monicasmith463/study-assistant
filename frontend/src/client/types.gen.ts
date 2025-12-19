@@ -139,7 +139,7 @@ export type QuestionPublic = {
     options?: Array<string>;
 };
 
-export type QuestionType = 'multiple_choice' | 'true_false';
+export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
 
 export type Token = {
     access_token: string;

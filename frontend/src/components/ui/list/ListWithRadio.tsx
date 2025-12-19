@@ -1,55 +1,68 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import RadioSm from "../../form/input/RadioSm";
 
-type ListWithRadioProps = {
-  name: string;
-  options: string[];
-  value?: string;
-  onChange: (value: string) => void;
-  error?: string;
-};
+export default function ListWithRadio() {
+  const [selectedValue, setSelectedValue] = useState<string>("option1");
 
-export default function ListWithRadio({
-  name,
-  options,
-  value,
-  onChange,
-  error,
-}: ListWithRadioProps) {
+  const handleChange = (value: string) => {
+    setSelectedValue(value);
+    console.log("Selected Value:", value);
+  };
   return (
-    <div>
-      <div
-        className={`rounded-lg border ${
-          error
-            ? "border-error-500"
-            : "border-gray-200 dark:border-gray-800"
-        } bg-white dark:bg-white/[0.03] sm:w-fit`}
-      >
-        <ul className="flex flex-col">
-          {options.map((option, idx) => (
-            <li
-              key={option}
-              className="border-b border-gray-200 px-3 py-2.5 last:border-b-0 dark:border-gray-800"
-            >
-              <RadioSm
-                id={`${name}-${idx}`}
-                name={name}
-                value={option}
-                checked={value === option}
-                label={option}
-                onChange={() => onChange(option)}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {error && (
-        <p className="mt-2 text-sm text-error-500">
-          {error}
-        </p>
-      )}
+    <div className="rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] sm:w-fit">
+      <ul className="flex flex-col">
+        <li className="border-b border-gray-200 px-3 py-2.5 last:border-b-0 dark:border-gray-800">
+          <RadioSm
+            id="option1"
+            name="example"
+            value="option1"
+            checked={selectedValue === "option1"}
+            label="Lorem ipsum dolor sit amet"
+            onChange={handleChange}
+          />
+        </li>
+        <li className="border-b border-gray-200 px-3 py-2.5 last:border-b-0 dark:border-gray-800">
+          <RadioSm
+            id="option2"
+            name="example"
+            value="option2"
+            checked={selectedValue === "option2"}
+            label="It is a long established fact reader"
+            onChange={handleChange}
+          />
+        </li>
+        <li className="border-b border-gray-200 px-3 py-2.5 last:border-b-0 dark:border-gray-800">
+          <RadioSm
+            id="option3"
+            name="example"
+            value="option3"
+            checked={selectedValue === "option3"}
+            label="Lorem ipsum dolor sit amet"
+            onChange={handleChange}
+          />
+        </li>
+        <li className="border-b border-gray-200 px-3 py-2.5 last:border-b-0 dark:border-gray-800">
+          <RadioSm
+            id="option4"
+            name="example"
+            value="option4"
+            checked={selectedValue === "option4"}
+            label="Lorem ipsum dolor sit amet"
+            onChange={handleChange}
+          />
+        </li>
+        <li className="border-b border-gray-200 px-3 py-2.5 last:border-b-0 dark:border-gray-800">
+          <RadioSm
+            id="option5"
+            name="example"
+            value="option5"
+            checked={selectedValue === "option5"}
+            label="Lorem ipsum dolor sit amet"
+            onChange={handleChange}
+          />
+        </li>
+      </ul>
     </div>
   );
 }

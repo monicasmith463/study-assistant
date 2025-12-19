@@ -31,7 +31,7 @@ Generate {num_questions} questions from the following document text.
 Each question must include:
 - question: the question text
 - answer: the correct answer (if known)
-- type: one of "multiple_choice" or "true_false""
+- type: one of "multiple_choice", "true_false", or "short_answer"
 - options: list of options if type is "multiple_choice", otherwise leave empty.
 
 Document text:
