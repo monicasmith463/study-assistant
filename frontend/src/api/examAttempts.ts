@@ -1,57 +1,53 @@
-import type {
-    ExamAttemptPublic,
-    ExamAttemptUpdate,
+import {
+    ExamAttemptsService,
+    type ExamAttemptPublic,
+    type ExamAttemptUpdate,
   } from "@/client";
 
-  const API_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  /**
+   * Create an exam attempt (step 1)
+   */
+  export async function createExamAttempt(
+    examId: string
+  ): Promise<ExamAttemptPublic> {
+    return ExamAttemptsService.createExamAttempt({
+      requestBody: {
+        exam_id: examId,
+      },
+    });
+  }
 
-  const authHeaders = () => ({
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
-  });
-
+  /**
+   * Submit answers + complete attempt (step 2)
+   *
+   * IMPORTANT:
+   * - `answers` must map ANSWER_ID → response
+   */
   export async function submitExamAttempt(
-    examId: string,
+    attemptId: string,
     answers: Record<string, string>
   ): Promise<ExamAttemptPublic> {
-    /* 1️⃣ Create attempt */
-    const createRes = await fetch(`${API_URL}/api/v1/exam-attempts/`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({
-        exam_id: examId,
-        is_complete: false,
-      }),
-    });
-
-    if (!createRes.ok) {
-      throw new Error("Failed to create exam attempt");
-    }
-
-    const attempt = await createRes.json();
-
-    /* 2️⃣ Update attempt */
-    const updatePayload: ExamAttemptUpdate = {
+    const payload: ExamAttemptUpdate = {
       is_complete: true,
-      answers: Object.entries(answers).map(([id, response]) => ({
-        id,
+      answers: Object.entries(answers).map(([question_id, response]) => ({
+        question_id,
         response,
       })),
     };
 
-    const updateRes = await fetch(
-      `${API_URL}/api/v1/exam-attempts/${attempt.id}`,
-      {
-        method: "PATCH",
-        headers: authHeaders(),
-        body: JSON.stringify(updatePayload),
-      }
-    );
+    return ExamAttemptsService.updateExamAttempt({
+      attemptId: attemptId,
+      requestBody: payload,
+    });
+  }
 
-    if (!updateRes.ok) {
-      throw new Error("Failed to submit exam");
-    }
-
-    return updateRes.json();
+  /**
+   * Fetch an exam attempt (for score page)
+   */
+  export async function fetchExamAttempt(
+    attemptId: string
+  ): Promise<ExamAttemptPublic> {
+    return ExamAttemptsService.readExamAttempt({
+      id: attemptId,
+    });
   }

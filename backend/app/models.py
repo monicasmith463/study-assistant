@@ -196,7 +196,8 @@ class AnswerPublic(AnswerBase):
 
 
 class AnswerUpdate(SQLModel):
-    id: uuid.UUID
+    id: uuid.UUID | None = None  # existing support (answer.id)
+    question_id: uuid.UUID | None = None  # new support (question.id)
     response: str
 
 

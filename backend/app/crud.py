@@ -140,9 +140,29 @@ def create_exam_attempt(
     *, session: Session, exam_in: ExamAttemptCreate, user_id: UUID
 ) -> ExamAttemptPublic:
     exam_attempt = ExamAttempt(**exam_in.model_dump(), owner_id=user_id)
-
     session.add(exam_attempt)
     session.commit()
+    session.refresh(exam_attempt)
+
+    # Fetch questions for this exam
+    questions = session.exec(
+        select(Question).where(Question.exam_id == exam_attempt.exam_id)
+    ).all()
+
+    # Create empty answers (response can be "" or None depending on your schema)
+    for q in questions:
+        session.add(
+            Answer(
+                attempt_id=exam_attempt.id,
+                question_id=q.id,
+                response="",  # or response="" if required
+            )
+        )
+
+    session.commit()
+
+    # Reload relationships so API returns attempt.answers
+    session.refresh(exam_attempt, attribute_names=["answers", "exam"])
     return ExamAttemptPublic.model_validate(exam_attempt)
 
 
@@ -185,15 +205,30 @@ def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
 def update_answers(
     *, session: Session, attempt_id: uuid.UUID, answers_in: list[AnswerUpdate]
 ) -> list[Answer]:
-    updated_answers = []
+    updated_answers: list[Answer] = []
+
     for answer_in in answers_in:
-        answer = session.get(Answer, answer_in.id)
-        if not answer:
-            raise ValueError(f"Answer {answer_in.id} not found")
+        answer: Answer | None = None
+
+        # ✅ Path A: update by Answer.id (your tests)
+        if answer_in.id is not None:
+            answer = session.get(Answer, answer_in.id)
+
+        # ✅ Path B: update by Question.id (your frontend)
+        if answer is None and answer_in.question_id is not None:
+            answer = session.exec(
+                select(Answer).where(
+                    Answer.attempt_id == attempt_id,
+                    Answer.question_id == answer_in.question_id,
+                )
+            ).first()
+
+        if answer is None:
+            raise ValueError("Answer not found for update")
+
         if answer.attempt_id != attempt_id:
-            raise ValueError(
-                f"Answer {answer_in.id} does not belong to exam attempt {attempt_id}"
-            )
+            raise ValueError("Answer does not belong to this attempt")
+
         answer.response = answer_in.response
         session.add(answer)
         updated_answers.append(answer)
