@@ -57,9 +57,28 @@ export const AnswerPublicSchema = {
 export const AnswerUpdateSchema = {
     properties: {
         id: {
-            type: 'string',
-            format: 'uuid',
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
             title: 'Id'
+        },
+        question_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Question Id'
         },
         response: {
             type: 'string',
@@ -67,7 +86,7 @@ export const AnswerUpdateSchema = {
         }
     },
     type: 'object',
-    required: ['id', 'response'],
+    required: ['response'],
     title: 'AnswerUpdate'
 } as const;
 

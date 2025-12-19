@@ -11,7 +11,8 @@ export type AnswerPublic = {
 };
 
 export type AnswerUpdate = {
-    id: string;
+    id?: (string | null);
+    question_id?: (string | null);
     response: string;
 };
 
