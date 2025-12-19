@@ -12,12 +12,9 @@ export default function ScoreExamPage() {
   const searchParams = useSearchParams();
   const examAttemptId = searchParams.get("attempt_id");
 
-  if (!examAttemptId) {
-    return <div>Missing exam context</div>;
-  }
-
   const examQuery = useQuery<ExamAttemptPublic>({
     queryKey: ["examAttemptId", examAttemptId],
+    enabled: !!examAttemptId,
     queryFn: async () => {
       const token = localStorage.getItem("access_token");
 
@@ -27,12 +24,19 @@ export default function ScoreExamPage() {
         },
       });
 
+
+
+
       if (!res.ok) {
         throw new Error("Failed to load exam attempt");
       }
       return res.json();
     },
   });
+
+  if (!examAttemptId) {
+    return <div>Missing exam context</div>;
+  }
 
   if (examQuery.isLoading) {
     return <div>Loading results…</div>;
@@ -44,8 +48,13 @@ export default function ScoreExamPage() {
 
   const attempt = examQuery.data;
 
-  // TODO: replace with real attempt answers later
-  const answers = {}; // or from attempt API
+    const answers =
+    attempt?.answers?.reduce<Record<string, string>>((acc, answer) => {
+      if (answer.question_id && answer.response) {
+        acc[answer.question_id] = answer.response;
+      }
+      return acc;
+    }, {}) ?? {};
 
   return (
     <ComponentCard title="Exam Results">

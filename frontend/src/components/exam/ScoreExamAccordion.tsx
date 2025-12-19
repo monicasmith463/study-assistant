@@ -9,10 +9,24 @@ type Props = {
 };
 
 export default function ScoreExamAccordion({ questions, answers }: Props) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndexes, setOpenIndexes] = useState<number[]>(() => {
+    return questions
+      .map((q, index) => {
+        const userAnswer = answers[q.id];
+        const isCorrect =
+          q.answer && userAnswer && userAnswer === q.answer;
+
+        return isCorrect ? null : index;
+      })
+      .filter((index): index is number => index !== null);
+  });
 
   const handleToggle = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
+    setOpenIndexes((prev) =>
+      prev.includes(index)
+        ? prev.filter((i) => i !== index)
+        : [...prev, index]
+    );
   };
 
   return (
@@ -56,7 +70,7 @@ export default function ScoreExamAccordion({ questions, answers }: Props) {
                 )}
               </div>
             }
-            isOpen={openIndex === index}
+            isOpen={openIndexes.includes(index)}
             toggleAccordion={() => handleToggle(index)}
           />
         );
