@@ -346,6 +346,20 @@ export const ExamAttemptCreateSchema = {
             type: 'string',
             format: 'uuid',
             title: 'Exam Id'
+        },
+        answers: {
+            anyOf: [
+                {
+                    items: {
+                        '$ref': '#/components/schemas/AnswerUpdate'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Answers'
         }
     },
     type: 'object',

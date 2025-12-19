@@ -118,7 +118,6 @@ export class DocumentsService {
 export class ExamAttemptsService {
     /**
      * Create Exam Attempt
-     * Create a new exam attempt for a specific exam.
      * @param data The data for the request.
      * @param data.requestBody
      * @returns ExamAttemptPublic Successful Response

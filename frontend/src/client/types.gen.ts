@@ -57,6 +57,7 @@ export type ExamAttemptCreate = {
     score?: (number | null);
     is_complete?: boolean;
     exam_id: string;
+    answers?: (Array<AnswerUpdate> | null);
 };
 
 export type ExamAttemptPublic = {
