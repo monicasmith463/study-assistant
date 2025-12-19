@@ -6,6 +6,7 @@ from sqlmodel import Session
 
 from app.core.config import settings
 from app.core.db import engine
+from app.main import app
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
 
@@ -17,6 +18,12 @@ def db() -> Generator[Session, None, None]:
             yield session
         finally:
             session.rollback()
+
+
+@pytest.fixture(scope="module")
+def client() -> Generator[TestClient, None, None]:
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.fixture(scope="module")
