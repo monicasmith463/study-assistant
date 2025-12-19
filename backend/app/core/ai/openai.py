@@ -32,7 +32,7 @@ Each question must include:
 - question: the question text
 - answer: the correct answer (if known)
 - type: one of "multiple_choice" or "true_false""
-- options: list of options if type is "multiple_choice", otherwise leave empty.
+- options: list of options
 
 Document text:
 {text}
@@ -58,7 +58,7 @@ def validate_and_convert_question_item(q: Any) -> QuestionCreate | None:
     try:
         return QuestionCreate(
             question=q.question,
-            answer=q.answer,
+            correct_answer=q.correct_answer,
             type=QuestionType(q.type),
             options=q.options or [],
         )

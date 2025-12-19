@@ -105,7 +105,7 @@ def create_question(
 ) -> QuestionPublic:
     db_question = Question(
         question=question_in.question,
-        answer=question_in.answer,
+        correct_answer=question_in.correct_answer,
         type=question_in.type,
         options=question_in.options or [],
         exam_id=exam_id,

@@ -69,7 +69,7 @@ def create_exam_with_attempt(
 
     question = Question(
         question=question_text,
-        answer=correct_answer,
+        correct_answer=correct_answer,
         type=question_type,
         exam_id=exam.id,
     )
