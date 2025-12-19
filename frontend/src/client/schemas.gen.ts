@@ -805,22 +805,6 @@ export const QuestionPublicSchema = {
             type: 'string',
             title: 'Question'
         },
-        answer: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Answer'
-        },
-        id: {
-            type: 'string',
-            format: 'uuid',
-            title: 'Id'
-        },
         type: {
             '$ref': '#/components/schemas/QuestionType'
         },
@@ -829,12 +813,27 @@ export const QuestionPublicSchema = {
                 type: 'string'
             },
             type: 'array',
-            title: 'Options',
-            default: []
+            title: 'Options'
+        },
+        correct_answer: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Correct Answer'
+        },
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
         }
     },
     type: 'object',
-    required: ['question', 'id', 'type'],
+    required: ['question', 'type', 'options', 'id'],
     title: 'QuestionPublic'
 } as const;
 

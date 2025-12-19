@@ -147,10 +147,10 @@ export type PrivateUserCreate = {
 
 export type QuestionPublic = {
     question: string;
-    answer?: (string | null);
-    id: string;
     type: QuestionType;
-    options?: Array<string>;
+    options: Array<string>;
+    correct_answer?: (string | null);
+    id: string;
 };
 
 export type QuestionType = 'multiple_choice' | 'true_false';
