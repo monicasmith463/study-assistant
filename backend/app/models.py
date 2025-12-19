@@ -213,6 +213,7 @@ class ExamAttemptPublic(ExamAttemptBase):
 
 class ExamAttemptCreate(ExamAttemptBase):
     exam_id: uuid.UUID
+    answers: list["AnswerUpdate"] | None = None
 
 
 class ExamAttemptUpdate(SQLModel):

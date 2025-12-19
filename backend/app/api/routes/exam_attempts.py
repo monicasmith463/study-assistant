@@ -1,3 +1,4 @@
+import logging
 import uuid
 from typing import Any
 
@@ -13,6 +14,8 @@ from app.models import (
     ExamAttemptUpdate,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/exam-attempts", tags=["exam-attempts"])
 
 
@@ -23,21 +26,42 @@ def get_exam_by_id(session: SessionDep, exam_in: ExamAttemptCreate) -> Exam | No
 
 @router.post("/", response_model=ExamAttemptPublic)
 def create_exam_attempt(
-    session: SessionDep, current_user: CurrentUser, exam_in: ExamAttemptCreate
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    exam_in: ExamAttemptCreate,
 ) -> Any:
-    """
-    Create a new exam attempt for a specific exam.
-    """
-    exam = get_exam_by_id(session, exam_in)
+    # 1️⃣ Validate exam
+    exam = session.get(Exam, exam_in.exam_id)
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
 
     if not current_user.is_superuser and exam.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+        raise HTTPException(status_code=403, detail="Not allowed")
 
+    # 2️⃣ Create attempt + pre-create answers
     exam_attempt = crud.create_exam_attempt(
-        session=session, user_id=current_user.id, exam_in=exam_in
+        session=session,
+        user_id=current_user.id,
+        exam_in=ExamAttemptCreate(exam_id=exam_in.exam_id),
     )
+
+    # 3️⃣ Update answers if provided
+    if exam_in.answers:
+        crud.update_answers(
+            session=session,
+            attempt_id=exam_attempt.id,
+            answers_in=exam_in.answers,
+        )
+
+    # 4️⃣ Complete + score
+    if exam_in.is_complete:
+        exam_attempt = crud.update_exam_attempt(
+            session=session,
+            db_exam_attempt=exam_attempt,
+            exam_attempt_in=ExamAttemptUpdate(is_complete=True),
+        )
+
     return exam_attempt
 
 
@@ -71,6 +95,7 @@ def update_exam_attempt(
     """
     exam_attempt = session.get(ExamAttempt, attempt_id)
     if not exam_attempt:
+        logger.warning("Exam attempt %s not found", attempt_id)
         raise HTTPException(status_code=404, detail="Exam attempt not found")
 
     if not current_user.is_superuser and exam_attempt.owner_id != current_user.id:
