@@ -440,38 +440,6 @@ export const ExamAttemptPublicSchema = {
     title: 'ExamAttemptPublic'
 } as const;
 
-export const ExamAttemptUpdateSchema = {
-    properties: {
-        is_complete: {
-            anyOf: [
-                {
-                    type: 'boolean'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Is Complete'
-        },
-        answers: {
-            anyOf: [
-                {
-                    items: {
-                        '$ref': '#/components/schemas/AnswerUpdate'
-                    },
-                    type: 'array'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Answers'
-        }
-    },
-    type: 'object',
-    title: 'ExamAttemptUpdate'
-} as const;
-
 export const ExamPublicSchema = {
     properties: {
         title: {

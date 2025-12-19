@@ -72,11 +72,6 @@ export type ExamAttemptPublic = {
     answers: Array<AnswerPublic>;
 };
 
-export type ExamAttemptUpdate = {
-    is_complete?: (boolean | null);
-    answers?: (Array<AnswerUpdate> | null);
-};
-
 export type ExamPublic = {
     title: string;
     description?: (string | null);
@@ -254,13 +249,6 @@ export type ExamAttemptsReadExamAttemptData = {
 };
 
 export type ExamAttemptsReadExamAttemptResponse = (ExamAttemptPublic);
-
-export type ExamAttemptsUpdateExamAttemptData = {
-    attemptId: string;
-    requestBody: ExamAttemptUpdate;
-};
-
-export type ExamAttemptsUpdateExamAttemptResponse = (ExamAttemptPublic);
 
 export type ExamsGenerateExamData = {
     requestBody: GenerateQuestionsRequest;
