@@ -19,6 +19,11 @@ type ExamFormData = {
   answers: Record<string, string>;
 };
 
+type SubmitExamPayload = {
+  exam_id: string;
+  answers: Record<string, string>;
+};
+
 export default function TakeExamForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -54,8 +59,8 @@ export default function TakeExamForm() {
 
   /* -------------------- Submit Exam -------------------- */
   const submitExamMutation = useMutation({
-    mutationFn: (data: ExamFormData) =>
-      submitExamAttempt(examId!, data.answers),
+    mutationFn: (payload: SubmitExamPayload) =>
+      submitExamAttempt(payload.exam_id, payload.answers),
 
     onSuccess: (attempt) => {
       router.push(`/score-exam?attempt_id=${attempt.id}`);
@@ -71,7 +76,7 @@ export default function TakeExamForm() {
     if (!examId) return;
 
     submitExamMutation.mutate({
-      examId,
+      exam_id: examId,
       answers: data.answers,
     });
   };
@@ -123,7 +128,6 @@ export default function TakeExamForm() {
 
           <div className="col-span-full">
             <Button
-            type="submit"
               className="w-full"
               size="sm"
               disabled={isSubmitting}

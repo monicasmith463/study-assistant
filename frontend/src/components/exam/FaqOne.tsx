@@ -1,12 +1,12 @@
 import React from "react";
 import { ChevronDownIcon } from "../../icons";
 
-interface FaqOneProps {
-  title: string;
-  content: string;
-  isOpen: boolean;
-  toggleAccordion: () => void; // Function to toggle the open state
-}
+type FaqOneProps = {
+    title: string;
+    content: React.ReactNode;
+    isOpen: boolean;
+    toggleAccordion: () => void;
+  };
 
 const FaqOne: React.FC<FaqOneProps> = ({
   title,
