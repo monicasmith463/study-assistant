@@ -180,17 +180,30 @@ def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
 def update_answers(
     *, session: Session, attempt_id: uuid.UUID, answers_in: list[AnswerUpdate]
 ) -> list[Answer]:
-    updated_answers = []
+    updated_answers: list[Answer] = []
+
     for answer_in in answers_in:
-        answer = session.get(Answer, answer_in.id)
+        question_id = answer_in.id  # interpreting id as question_id
+
+        statement = select(Answer).where(
+            Answer.attempt_id == attempt_id,
+            Answer.question_id == question_id,
+        )
+        answer = session.exec(statement).first()
+
         if not answer:
-            raise ValueError(f"Answer {answer_in.id} not found")
-        if answer.attempt_id != attempt_id:
-            raise ValueError(
-                f"Answer {answer_in.id} does not belong to exam attempt {attempt_id}"
+            # Create new answer
+            answer = Answer(
+                attempt_id=attempt_id,
+                question_id=question_id,
+                response=answer_in.response,
             )
-        answer.response = answer_in.response
-        session.add(answer)
+            session.add(answer)
+        else:
+            # Update existing answer
+            answer.response = answer_in.response
+            session.add(answer)
+
         updated_answers.append(answer)
 
     session.commit()
