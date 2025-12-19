@@ -46,7 +46,7 @@ def upgrade():
     sa.Column('question', sa.Text(), nullable=False),
     sa.Column('answer', sa.Text(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('type', sa.Enum('MULTIPLE_CHOICE', 'TRUE_FALSE', 'SHORT_ANSWER', name='questiontype'), nullable=False),
+    sa.Column('type', sa.Enum('MULTIPLE_CHOICE', 'TRUE_FALSE', name='questiontype'), nullable=False),
     sa.Column('options', sa.JSON(), nullable=True),
     sa.Column('exam_id', sa.Uuid(), nullable=False),
     sa.ForeignKeyConstraint(['exam_id'], ['exam.id'], ),
