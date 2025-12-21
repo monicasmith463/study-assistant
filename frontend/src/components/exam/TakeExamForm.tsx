@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 import Button from "../ui/button/Button";
 import Form from "../form/Form";
@@ -11,6 +11,7 @@ import ComponentCard from "../common/ComponentCard";
 
 import type { ExamPublic, QuestionPublic } from "@/client";
 import ListWithRadio from "../ui/list/ListWithRadio";
+import { createExamAttempt } from "@/api/examAttempts";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -18,8 +19,14 @@ type ExamFormData = {
   answers: Record<string, string>;
 };
 
+type SubmitExamPayload = {
+  exam_id: string;
+  answers: Record<string, string>;
+};
+
 export default function TakeExamForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const examId = searchParams.get("exam_id");
 
   const {
@@ -50,10 +57,26 @@ export default function TakeExamForm() {
     },
   });
 
-  /* -------------------- Submit -------------------- */
+  /* -------------------- Submit Exam -------------------- */
+  const submitExamMutation = useMutation({
+    mutationFn: (payload: SubmitExamPayload) =>
+      createExamAttempt(payload.exam_id, payload.answers),
+
+    onSuccess: (attempt) => {
+      router.push(`/score-exam?attempt_id=${attempt.id}`);
+    },
+
+    onError: () => {
+      router.push("/error-500");
+    },
+  });
+
+  /* -------------------- Submit Handler -------------------- */
   const onSubmit = (data: ExamFormData) => {
-    console.log("Submitting exam:", {
-      examId,
+    if (!examId) return;
+
+    submitExamMutation.mutate({
+      exam_id: examId,
       answers: data.answers,
     });
   };

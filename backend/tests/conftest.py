@@ -17,17 +17,19 @@ def db() -> Generator[Session, None, None]:
     with Session(engine) as session:
         init_db(session)
         yield session
-        statement = delete(Answer)
-        session.execute(statement)
-        statement = delete(Question)
-        session.execute(statement)
-        statement = delete(Exam)
-        session.execute(statement)
-        statement = delete(Document)
-        session.execute(statement)
-        statement = delete(User)
-        session.execute(statement)
+        session.execute(delete(Answer))
+        session.execute(delete(Question))
+        session.execute(delete(Exam))
+        session.execute(delete(Document))
+        session.execute(delete(User))
         session.commit()
+
+
+# 🔑 THIS FIXES THE 404 / PendingRollbackError CASCADE
+@pytest.fixture(autouse=True)
+def _rollback_after_test(db: Session) -> Generator[None, None, None]:
+    yield
+    db.rollback()
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +43,8 @@ def superuser_token_headers(client: TestClient) -> dict[str, str]:
     return get_superuser_token_headers(client)
 
 
-@pytest.fixture(scope="module")
+# 🔑 MUST be function-scoped
+@pytest.fixture(scope="function")
 def normal_user_token_headers(client: TestClient, db: Session) -> dict[str, str]:
     return authentication_token_from_email(
         client=client, email=settings.EMAIL_TEST_USER, db=db

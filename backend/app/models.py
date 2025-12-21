@@ -138,17 +138,19 @@ class QuestionType(str, Enum):
 
 class QuestionBase(SQLModel):
     question: str = Field(sa_column=Column(Text, nullable=False))
-    # TODO: Get the answer from generated questions for test grading
-    answer: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+
+    type: QuestionType = Field(sa_column=Column(SAEnum(QuestionType), nullable=False))
+
+    options: list[str] = Field(sa_column=Column(JSON, nullable=False))
+
+    # correct answer (used for grading)
+    correct_answer: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
 
 
 class Question(QuestionBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    type: QuestionType = Field(
-        default=QuestionType.MULTIPLE_CHOICE,
-        sa_column=Column(SAEnum(QuestionType), nullable=False),
-    )
-    options: list[str] = Field(default_factory=list, sa_column=Column(JSON))
     exam_id: uuid.UUID = Field(foreign_key="exam.id", nullable=False)
     exam: Exam | None = Relationship(back_populates="questions")
     answers: list["Answer"] = Relationship(
@@ -161,7 +163,6 @@ class Question(QuestionBase, table=True):
 class QuestionPublic(QuestionBase):
     id: uuid.UUID
     type: QuestionType
-    options: list[str] = []  # optional, only for multiple choice
 
 
 # Properties to receive on document creation
@@ -181,7 +182,7 @@ class ExamAttemptBase(SQLModel):
 
 
 class AnswerBase(SQLModel):
-    response: str
+    response: str | None = None
     is_correct: bool | None = None
     explanation: str | None = None
 
@@ -191,23 +192,29 @@ class AnswerPublic(AnswerBase):
     question_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
+    response: str
+    is_correct: bool | None = None
 
 
 class AnswerUpdate(SQLModel):
-    id: uuid.UUID
+    id: uuid.UUID | None = None  # existing support (answer.id)
+    question_id: uuid.UUID | None = None  # new support (question.id)
     response: str
 
 
 class ExamAttemptPublic(ExamAttemptBase):
     id: uuid.UUID
     exam_id: uuid.UUID
-    completed_at: datetime | None = None
+    completed_at: datetime | None
     created_at: datetime
     updated_at: datetime
+    exam: ExamPublic | None
+    answers: list[AnswerPublic]
 
 
 class ExamAttemptCreate(ExamAttemptBase):
     exam_id: uuid.UUID
+    answers: list["AnswerUpdate"] | None = None
 
 
 class ExamAttemptUpdate(SQLModel):

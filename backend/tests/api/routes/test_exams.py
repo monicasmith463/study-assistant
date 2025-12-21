@@ -23,7 +23,7 @@ def test_generate_exam(
     mock_questions = [
         QuestionCreate(
             question=f"Generated question {i}",
-            answer=None,
+            correct_answer="some answer",
             type=QuestionType.MULTIPLE_CHOICE,
             options=[],
         )
