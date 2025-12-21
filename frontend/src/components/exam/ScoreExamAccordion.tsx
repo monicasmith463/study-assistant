@@ -1,25 +1,28 @@
 "use client";
 import React, { useState } from "react";
 import FaqOne from "./FaqOne";
-import type { QuestionPublic } from "@/client";
+import type { QuestionPublic, AnswerPublic } from "@/client";
 
 type Props = {
   questions: QuestionPublic[];
-  answers: Record<string, string>;
+  answers: AnswerPublic[];
 };
 
 export default function ScoreExamAccordion({ questions, answers }: Props) {
-  const [openIndexes, setOpenIndexes] = useState<number[]>(() => {
-    return questions
-      .map((q, index) => {
-        const userAnswer = answers[q.id];
-        const isCorrect =
-          q.answer && userAnswer && userAnswer === q.answer;
+  const answersArray = Array.isArray(answers) ? answers : [];
 
-        return isCorrect ? null : index;
+  const answersByQuestionId = Object.fromEntries(
+    answersArray.map((a) => [a.question_id, a])
+  );
+
+  const [openIndexes, setOpenIndexes] = useState<number[]>(() =>
+    questions
+      .map((q, index) => {
+        const answer = answersByQuestionId[q.id];
+        return answer?.is_correct === false ? index : null;
       })
-      .filter((index): index is number => index !== null);
-  });
+      .filter((i): i is number => i !== null)
+  );
 
   const handleToggle = (index: number) => {
     setOpenIndexes((prev) =>
@@ -32,13 +35,15 @@ export default function ScoreExamAccordion({ questions, answers }: Props) {
   return (
     <div className="space-y-4">
       {questions.map((q, index) => {
-        const userAnswer = answers[q.id];
-        const isCorrect =
-          q.answer && userAnswer && userAnswer === q.answer;
+        const answer = answersByQuestionId[q.id];
+
+        const isCorrect = answer?.is_correct === true;
+        const isWrong = answer?.is_correct === false;
+
 
         const statusIcon = isCorrect
           ? "✅"
-          : userAnswer
+          : isWrong
           ? "❌"
           : "⏳";
 
@@ -46,32 +51,31 @@ export default function ScoreExamAccordion({ questions, answers }: Props) {
           <FaqOne
             key={q.id}
             title={`${statusIcon} ${q.question}`}
+            isOpen={openIndexes.includes(index)}
+            toggleAccordion={() => handleToggle(index)}
             content={
               <div className="space-y-3 text-sm">
                 <p>
                   <strong>Your answer:</strong>{" "}
-                  {userAnswer ?? "Not answered"}
+                  {answer?.response || "Not answered"}
                 </p>
 
-                {q.answer && (
+                {q.correct_answer && (
                   <p>
-                    <strong>Correct answer:</strong> {q.answer}
+                    <strong>Correct answer:</strong> {q.correct_answer}
                   </p>
                 )}
 
-                {q.answer && (
+                {isWrong && (
                   <div className="mt-2">
                     <strong>Explanation:</strong>
                     <p className="mt-1 text-gray-600">
-                      {/* placeholder or explanation text */}
-                      This answer is correct because…
+                      This answer is incorrect because…
                     </p>
                   </div>
                 )}
               </div>
             }
-            isOpen={openIndexes.includes(index)}
-            toggleAccordion={() => handleToggle(index)}
           />
         );
       })}

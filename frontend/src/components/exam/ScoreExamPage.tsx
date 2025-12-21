@@ -31,13 +31,7 @@ export default function ScoreExamPage() {
 
   const attempt = examQuery.data;
 
-  const answers =
-    attempt?.answers?.reduce<Record<string, string>>((acc, answer) => {
-      if (answer.question_id && answer.response) {
-        acc[answer.question_id] = answer.response;
-      }
-      return acc;
-    }, {}) ?? {};
+  const answers = attempt?.answers ?? [];
 
   return (
     <ComponentCard title="Exam Results">
