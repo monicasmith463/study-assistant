@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -5,6 +6,7 @@ from uuid import UUID
 
 from sqlmodel import Session, select
 
+from app.core.ai.openai import generate_answer_explanation
 from app.core.security import get_password_hash, verify_password
 from app.models import (
     Answer,
@@ -15,8 +17,6 @@ from app.models import (
     Exam,
     ExamAttempt,
     ExamAttemptCreate,
-    ExamAttemptPublic,
-    ExamAttemptUpdate,
     ExamCreate,
     ExamPublic,
     Item,
@@ -212,7 +212,7 @@ def update_answers(
     return updated
 
 
-def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
+async def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
     total_questions = len(exam_attempt.answers)
     correct_count = 0
 
@@ -240,6 +240,14 @@ def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
         if is_correct:
             correct_count += 1
 
+        else:
+            explanation_output = await generate_answer_explanation(
+                question=question.question,
+                correct_answer=question.correct_answer,
+                user_answer=answer.response,
+            )
+            answer.explanation = json.loads(explanation_output.model_dump())
+
     score = (correct_count / total_questions) * 100 if total_questions else 0
     exam_attempt.score = score
     session.add(exam_attempt)
@@ -249,7 +257,7 @@ def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
     return score
 
 
-def finalize_exam_attempt(
+async def finalize_exam_attempt(
     *,
     session: Session,
     exam_attempt: ExamAttempt,
@@ -266,29 +274,6 @@ def finalize_exam_attempt(
     for ans in exam_attempt.answers:
         session.refresh(ans, attribute_names=["question"])
 
-    score_exam_attempt(session=session, exam_attempt=exam_attempt)
+    await score_exam_attempt(session=session, exam_attempt=exam_attempt)
     session.refresh(exam_attempt)
     return exam_attempt
-
-
-def update_exam_attempt(
-    *,
-    session: Session,
-    db_exam_attempt: ExamAttempt,
-    exam_attempt_in: ExamAttemptUpdate,
-) -> ExamAttemptPublic:
-    if exam_attempt_in.answers:
-        update_answers(
-            session=session,
-            attempt_id=db_exam_attempt.id,
-            answers_in=exam_attempt_in.answers,
-        )
-
-    if exam_attempt_in.is_complete:
-        db_exam_attempt = finalize_exam_attempt(
-            session=session,
-            exam_attempt=db_exam_attempt,
-        )
-
-    session.refresh(db_exam_attempt)
-    return ExamAttemptPublic.model_validate(db_exam_attempt)

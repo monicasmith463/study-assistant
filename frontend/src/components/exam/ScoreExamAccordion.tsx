@@ -39,6 +39,7 @@ export default function ScoreExamAccordion({ questions, answers }: Props) {
 
         const isCorrect = answer?.is_correct === true;
         const isWrong = answer?.is_correct === false;
+        const explanation = answer?.explanation;
 
 
         const statusIcon = isCorrect
@@ -70,7 +71,7 @@ export default function ScoreExamAccordion({ questions, answers }: Props) {
                   <div className="mt-2">
                     <strong>Explanation:</strong>
                     <p className="mt-1 text-gray-600">
-                      This answer is incorrect because…
+                      {explanation || "No explanation provided."}
                     </p>
                   </div>
                 )}

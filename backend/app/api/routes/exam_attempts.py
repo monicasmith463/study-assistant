@@ -24,7 +24,7 @@ def get_exam_by_id(session: SessionDep, exam_in: ExamAttemptCreate) -> Exam | No
 
 
 @router.post("/", response_model=ExamAttemptPublic)
-def create_exam_attempt(
+async def create_exam_attempt(
     *,
     session: SessionDep,
     current_user: CurrentUser,
@@ -55,7 +55,7 @@ def create_exam_attempt(
 
     # 4️⃣ Finalize + score (optional)
     if exam_in.is_complete:
-        exam_attempt = crud.finalize_exam_attempt(
+        exam_attempt = await crud.finalize_exam_attempt(
             session=session,
             exam_attempt=exam_attempt,
         )
