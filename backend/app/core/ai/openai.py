@@ -170,7 +170,10 @@ async def generate_answer_explanation(
     )
 
     try:
-        return await structured_explanation_llm.ainvoke(prompt)
+        raw = await structured_explanation_llm.ainvoke(prompt)
+
+        # 🔑 enforce type
+        return ExplanationOutput.model_validate(raw)
     except Exception as e:
         logger.error(f"Failed to generate explanation: {e}")
         raise HTTPException(
