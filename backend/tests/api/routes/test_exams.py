@@ -25,7 +25,7 @@ def test_generate_exam(
             question=f"Generated question {i}",
             correct_answer="some answer",
             type=QuestionType.MULTIPLE_CHOICE,
-            options=[],
+            options=["option1", "option2", "option3"],
         )
         for i in range(1, 5)
     ]

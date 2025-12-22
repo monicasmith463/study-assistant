@@ -168,7 +168,7 @@ class QuestionPublic(QuestionBase):
 # Properties to receive on document creation
 class QuestionCreate(QuestionBase):
     type: QuestionType
-    options: list[str] = []  # optional, only for multiple choice
+    options: list[str]
 
 
 class GenerateQuestionsRequest(SQLModel):
@@ -181,10 +181,34 @@ class ExamAttemptBase(SQLModel):
     is_complete: bool = Field(default=False)
 
 
+class AnswerExplanation(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+
+    answer_id: uuid.UUID = Field(
+        foreign_key="answer.id",
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    explanation: str = Field(sa_column=Column(Text, nullable=False))
+    key_takeaway: str = Field(sa_column=Column(Text, nullable=False))
+    suggested_review: str = Field(sa_column=Column(Text, nullable=False))
+
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    answer: "Answer" = Relationship(back_populates="explanation")
+
+
 class AnswerBase(SQLModel):
     response: str | None = None
     is_correct: bool | None = None
-    explanation: str | None = None
+
+
+class ExplanationOutput(PydanticBaseModel):
+    explanation: str
+    key_takeaway: str
+    suggested_review: str
 
 
 class AnswerPublic(AnswerBase):
@@ -194,6 +218,7 @@ class AnswerPublic(AnswerBase):
     updated_at: datetime
     response: str
     is_correct: bool | None = None
+    explanation: ExplanationOutput | None = None
 
 
 class AnswerUpdate(SQLModel):
@@ -203,6 +228,9 @@ class AnswerUpdate(SQLModel):
 
 
 class ExamAttemptPublic(ExamAttemptBase):
+    # prevent string cohercion issues
+    model_config = {"from_attributes": True}
+
     id: uuid.UUID
     exam_id: uuid.UUID
     completed_at: datetime | None
@@ -251,6 +279,10 @@ class Answer(AnswerBase, table=True):
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc)},
+    )
+    explanation: AnswerExplanation | None = Relationship(
+        back_populates="answer",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
 
 
@@ -367,7 +399,7 @@ class QuestionItem(PydanticBaseModel):
     question: str
     answer: str | None
     type: str
-    options: list[str] | None = None
+    options: list[str]  # required!
 
 
 class QuestionOutput(PydanticBaseModel):

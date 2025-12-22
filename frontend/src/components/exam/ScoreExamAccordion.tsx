@@ -39,6 +39,7 @@ export default function ScoreExamAccordion({ questions, answers }: Props) {
 
         const isCorrect = answer?.is_correct === true;
         const isWrong = answer?.is_correct === false;
+        const explanation = answer?.explanation;
 
 
         const statusIcon = isCorrect
@@ -66,14 +67,30 @@ export default function ScoreExamAccordion({ questions, answers }: Props) {
                   </p>
                 )}
 
-                {isWrong && (
-                  <div className="mt-2">
-                    <strong>Explanation:</strong>
-                    <p className="mt-1 text-gray-600">
-                      This answer is incorrect because…
-                    </p>
-                  </div>
-                )}
+{isWrong && explanation && typeof explanation === "object" && (
+  <div className="mt-2 space-y-2">
+    <p className="text-gray-700">
+      <strong>Explanation:</strong>{" "}
+      {explanation.explanation}
+    </p>
+
+    <p className="text-gray-700">
+      <strong>Key takeaway:</strong>{" "}
+      {explanation.key_takeaway}
+    </p>
+
+    <p className="text-gray-700">
+      <strong>Suggested review:</strong>{" "}
+      {explanation.suggested_review}
+    </p>
+  </div>
+)}
+
+{isWrong && !explanation && (
+  <p className="mt-2 text-gray-500">
+    No explanation provided.
+  </p>
+)}
               </div>
             }
           />

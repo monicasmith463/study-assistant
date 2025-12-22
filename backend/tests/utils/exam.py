@@ -44,6 +44,7 @@ def create_random_exam(
                     answer=f"Answer {i+1}",
                     type="multiple_choice",
                     exam_id=db_exam.id,
+                    options=[f"Option {j+1}" for j in range(4)],
                 )
             )
 

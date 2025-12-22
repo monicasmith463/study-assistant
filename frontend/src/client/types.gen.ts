@@ -3,11 +3,11 @@
 export type AnswerPublic = {
     response: string;
     is_correct?: (boolean | null);
-    explanation?: (string | null);
     id: string;
     question_id: string;
     created_at: string;
     updated_at: string;
+    explanation?: (ExplanationOutput | null);
 };
 
 export type AnswerUpdate = {
@@ -92,6 +92,12 @@ export type ExamUpdate = {
     description?: (string | null);
     duration_minutes?: (number | null);
     is_published?: (boolean | null);
+};
+
+export type ExplanationOutput = {
+    explanation: string;
+    key_takeaway: string;
+    suggested_review: string;
 };
 
 export type GenerateQuestionsRequest = {
