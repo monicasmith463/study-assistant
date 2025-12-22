@@ -28,11 +28,19 @@ def generate_questions_prompt(text: str, num_questions: int = 5) -> str:
     return f"""
 Generate {num_questions} questions from the following document text.
 
-Each question must include:
-- question: the question text
-- answer: the correct answer (if known)
-- type: one of "multiple_choice" or "true_false""
-- options: list of options
+Rules (must follow exactly):
+- Each question MUST include:
+  - question (string)
+  - answer (string or null)
+  - type: "multiple_choice" or "true_false"
+  - options (array of strings)
+- For true_false questions:
+  - options MUST be exactly ["True", "False"]
+- For multiple_choice questions:
+  - options MUST contain at least 3 plausible choices
+  - answer MUST match exactly one option
+
+Return structured data only.
 
 Document text:
 {text}
@@ -60,7 +68,7 @@ def validate_and_convert_question_item(q: Any) -> QuestionCreate | None:
             question=q.question,
             correct_answer=q.correct_answer,
             type=QuestionType(q.type),
-            options=q.options or [],
+            options=q.options,
         )
     except ValidationError as ve:
         logger.error(f"Validation error for question item {q}: {ve}")
@@ -91,7 +99,8 @@ async def generate_questions_from_documents(
     )
 
     try:
-        llm_output = structured_llm.invoke(prompt)
+        # async call to the API
+        llm_output = await structured_llm.ainvoke(prompt)
         return parse_llm_output(llm_output)
     except ValidationError as ve:
         logger.error(f"Pydantic validation error: {ve}")
