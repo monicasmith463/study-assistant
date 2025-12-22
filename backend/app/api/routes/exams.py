@@ -34,6 +34,7 @@ async def generate_exam(
         description="generated exam",
         duration_minutes=30,
         is_published=False,
+        source_document_ids=payload.document_ids,
     )
     db_exam = crud.create_db_exam(
         session=session, exam_in=exam_in, owner_id=current_user.id

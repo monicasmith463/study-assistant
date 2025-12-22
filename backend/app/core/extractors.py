@@ -1,3 +1,4 @@
+from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from sqlmodel import Session, select
 
@@ -5,16 +6,26 @@ from app.core.db import engine
 from app.core.s3 import extract_text_from_s3_file
 from app.models import Document, DocumentChunk
 
+embeddings = OpenAIEmbeddings(
+    model="text-embedding-3-small"  # or 3-large if you want
+)
+
 
 def save_chunks_to_db(session: Session, document_id: str, chunks: list[str]) -> None:
     """
     Saves the text chunks to the database.
     """
-    for chunk in chunks:
-        document_chunk = DocumentChunk(
-            document_id=document_id, text=chunk, size=len(chunk)
+    embeddings = embed_chunks(chunks)
+
+    for chunk, embedding in zip(chunks, embeddings, strict=False):
+        session.add(
+            DocumentChunk(
+                document_id=document_id,
+                text=chunk,
+                size=len(chunk),
+                embedding=embedding,
+            )
         )
-        session.add(document_chunk)
 
 
 def perform_fixed_size_chunking(
@@ -42,6 +53,10 @@ def perform_fixed_size_chunking(
     # Split the text into chunks
     chunks = text_splitter.split_text(text)
     return chunks
+
+
+def embed_chunks(chunks: list[str]) -> list[list[float]]:
+    return embeddings.embed_documents(chunks)
 
 
 def extract_text_and_save_to_db(s3_key: str, document_id: str) -> None:

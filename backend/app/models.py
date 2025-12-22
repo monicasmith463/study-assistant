@@ -2,9 +2,8 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
+from pgvector.sqlalchemy import Vector  # type: ignore
 from pydantic import BaseModel as PydanticBaseModel
-
-# from pgvector.sqlalchemy import Vector  # type: ignore
 from pydantic import EmailStr
 from pydantic import Field as PydanticField
 from sqlalchemy import Column, Text
@@ -103,12 +102,17 @@ class Exam(ExamBase, table=True):
     exam_attempts: list["ExamAttempt"] = Relationship(
         back_populates="exam", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+    source_document_ids: list[uuid.UUID] = Field(
+        default_factory=list,
+        sa_column=Column(JSON, nullable=False),
+    )
 
 
 class ExamPublic(ExamBase):
     id: uuid.UUID
     owner_id: uuid.UUID
     questions: list["QuestionPublic"] = PydanticField(default_factory=list)
+    source_document_ids: list[uuid.UUID] = PydanticField(default_factory=list)
 
 
 class ExamsPublic(SQLModel):
@@ -206,6 +210,7 @@ class AnswerBase(SQLModel):
 
 
 class ExplanationOutput(PydanticBaseModel):
+    model_config = {"from_attributes": True}
     explanation: str
     key_takeaway: str
     suggested_review: str
@@ -282,7 +287,7 @@ class Answer(AnswerBase, table=True):
     )
     explanation: AnswerExplanation | None = Relationship(
         back_populates="answer",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+        sa_relationship_kwargs={"uselist": False, "cascade": "all, delete-orphan"},
     )
 
 
@@ -338,7 +343,7 @@ class DocumentsPublic(SQLModel):
 class DocumentChunkBase(SQLModel):
     text: str
     # TODO: vectorize for RAG
-    # vector: list[float] | None = Field(default=None, sa_column=Column(Vector(1536)))
+    embedding: list[float] | None = Field(default=None, sa_column=Column(Vector(1536)))
 
 
 class DocumentChunk(DocumentChunkBase, table=True):

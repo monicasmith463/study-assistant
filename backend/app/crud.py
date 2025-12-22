@@ -116,13 +116,20 @@ def create_question(
     return QuestionPublic.model_validate(db_question)
 
 
-def create_db_exam(*, session: Session, exam_in: ExamCreate, owner_id: UUID) -> Exam:
+def create_db_exam(
+    *,
+    session: Session,
+    exam_in: ExamCreate,
+    owner_id: UUID,
+    source_document_ids: list[UUID] | None = None,
+) -> Exam:
     db_exam = Exam(
         title=exam_in.title,
         description=exam_in.description,
         duration_minutes=exam_in.duration_minutes,
         is_published=exam_in.is_published,
         owner_id=owner_id,
+        source_document_ids=source_document_ids,
     )
     session.add(db_exam)
     session.commit()

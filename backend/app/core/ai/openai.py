@@ -130,35 +130,32 @@ def generate_explanation_prompt(
     question: str,
     correct_answer: str,
     user_answer: str,
+    context_chunks: list[str],
 ) -> str:
+    context = "\n\n".join(context_chunks)
+
     return f"""
-You are a tutor helping a student understand a mistake.
+You are a tutor explaining why a student answer is incorrect.
 
 Question:
 {question}
 
-Student's answer:
-{user_answer}
-
 Correct answer:
 {correct_answer}
 
-Explain clearly:
-- Why the student's answer is incorrect
-- What the correct reasoning is
-- One short key takeaway
-- One thing the student should review
+Student answer:
+{user_answer}
 
-Be concise, supportive, and factual.
-Do NOT restate the question.
+Relevant study material:
+{context}
+
+Explain clearly using ONLY the material above.
+Avoid introducing new facts.
 """
 
 
 async def generate_answer_explanation(
-    *,
-    question: str,
-    correct_answer: str,
-    user_answer: str,
+    *, question: str, correct_answer: str, user_answer: str, context_chunks: list[str]
 ) -> ExplanationOutput:
     if not correct_answer:
         raise ValueError("Cannot generate explanation without a correct answer")
@@ -167,6 +164,7 @@ async def generate_answer_explanation(
         question=question,
         correct_answer=correct_answer,
         user_answer=user_answer,
+        context_chunks=context_chunks,
     )
 
     try:
