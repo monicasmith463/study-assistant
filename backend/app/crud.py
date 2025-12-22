@@ -1,4 +1,3 @@
-import json
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -10,6 +9,7 @@ from app.core.ai.openai import generate_answer_explanation
 from app.core.security import get_password_hash, verify_password
 from app.models import (
     Answer,
+    AnswerExplanation,
     AnswerUpdate,
     Document,
     DocumentCreate,
@@ -246,7 +246,11 @@ async def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> flo
                 correct_answer=question.correct_answer,
                 user_answer=answer.response,
             )
-            answer.explanation = json.loads(explanation_output.model_dump())
+            answer.explanation = AnswerExplanation(
+                explanation=explanation_output.explanation,
+                key_takeaway=explanation_output.key_takeaway,
+                suggested_review=explanation_output.suggested_review,
+            )
 
     score = (correct_count / total_questions) * 100 if total_questions else 0
     exam_attempt.score = score
