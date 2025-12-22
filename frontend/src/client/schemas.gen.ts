@@ -17,17 +17,6 @@ export const AnswerPublicSchema = {
             ],
             title: 'Is Correct'
         },
-        explanation: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Explanation'
-        },
         id: {
             type: 'string',
             format: 'uuid',
@@ -47,6 +36,16 @@ export const AnswerPublicSchema = {
             type: 'string',
             format: 'date-time',
             title: 'Updated At'
+        },
+        explanation: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/ExplanationOutput'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     type: 'object',
@@ -567,6 +566,26 @@ export const ExamsPublicSchema = {
     type: 'object',
     required: ['data', 'count'],
     title: 'ExamsPublic'
+} as const;
+
+export const ExplanationOutputSchema = {
+    properties: {
+        explanation: {
+            type: 'string',
+            title: 'Explanation'
+        },
+        key_takeaway: {
+            type: 'string',
+            title: 'Key Takeaway'
+        },
+        suggested_review: {
+            type: 'string',
+            title: 'Suggested Review'
+        }
+    },
+    type: 'object',
+    required: ['explanation', 'key_takeaway', 'suggested_review'],
+    title: 'ExplanationOutput'
 } as const;
 
 export const GenerateQuestionsRequestSchema = {
