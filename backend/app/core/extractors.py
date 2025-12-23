@@ -1,14 +1,12 @@
-from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from sqlmodel import Session, select
 
+from app.core.ai.embeddings import get_embeddings_model
 from app.core.db import engine
 from app.core.s3 import extract_text_from_s3_file
 from app.models import Document, DocumentChunk
 
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-small"  # or 3-large if you want
-)
+embeddings_model = get_embeddings_model()
 
 
 def save_chunks_to_db(session: Session, document_id: str, chunks: list[str]) -> None:
@@ -56,7 +54,7 @@ def perform_fixed_size_chunking(
 
 
 def embed_chunks(chunks: list[str]) -> list[list[float]]:
-    return embeddings.embed_documents(chunks)
+    return embeddings_model.embed_documents(chunks)
 
 
 def extract_text_and_save_to_db(s3_key: str, document_id: str) -> None:
