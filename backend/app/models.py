@@ -102,7 +102,7 @@ class Exam(ExamBase, table=True):
     exam_attempts: list["ExamAttempt"] = Relationship(
         back_populates="exam", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
-    source_document_ids: list[uuid.UUID] = Field(
+    source_document_ids: list[str] = Field(
         default_factory=list,
         sa_column=Column(JSON, nullable=False),
     )
@@ -112,7 +112,7 @@ class ExamPublic(ExamBase):
     id: uuid.UUID
     owner_id: uuid.UUID
     questions: list["QuestionPublic"] = PydanticField(default_factory=list)
-    source_document_ids: list[uuid.UUID] = PydanticField(default_factory=list)
+    source_document_ids: list[str] = PydanticField(default_factory=list)
 
 
 class ExamsPublic(SQLModel):

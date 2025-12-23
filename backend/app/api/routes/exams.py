@@ -28,16 +28,21 @@ async def generate_exam(
     payload: GenerateQuestionsRequest,
     current_user: CurrentUser,
 ) -> ExamPublic:
+    source_document_ids = [str(doc_id) for doc_id in payload.document_ids]
+
     # TODO: fix the hardcoding here
     exam_in = ExamCreate(
         title="Midterm Exam",
         description="generated exam",
         duration_minutes=30,
         is_published=False,
-        source_document_ids=payload.document_ids,
+        source_document_ids=source_document_ids,
     )
     db_exam = crud.create_db_exam(
-        session=session, exam_in=exam_in, owner_id=current_user.id
+        session=session,
+        exam_in=exam_in,
+        owner_id=current_user.id,
+        source_document_ids=source_document_ids,
     )
 
     # 2. Generate questions

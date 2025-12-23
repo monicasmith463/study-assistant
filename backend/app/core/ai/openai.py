@@ -8,6 +8,8 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlmodel import Session
 
+from app.core.ai.embeddings import embed_text
+from app.core.ai.retrieval import retrieve_top_k_chunks
 from app.core.config import settings
 from app.models import (
     Document,
@@ -154,11 +156,37 @@ Avoid introducing new facts.
 """
 
 
+def normalize_uuid_list(values: list[str | UUID]) -> list[UUID]:
+    return [v if isinstance(v, UUID) else UUID(v) for v in values]
+
+
 async def generate_answer_explanation(
-    *, question: str, correct_answer: str, user_answer: str, context_chunks: list[str]
+    *,
+    session: Session,
+    exam: Any,  # ideally Exam
+    question: str,
+    correct_answer: str,
+    user_answer: str,
 ) -> ExplanationOutput:
     if not correct_answer:
         raise ValueError("Cannot generate explanation without a correct answer")
+
+    source_doc_ids = normalize_uuid_list(exam.source_document_ids)
+
+    query_text = (
+        f"Question: {question}\n"
+        f"Correct answer: {correct_answer}\n"
+        f"Student answer: {user_answer}"
+    )
+
+    query_embedding = embed_text(query_text)
+
+    context_chunks = retrieve_top_k_chunks(
+        session=session,
+        document_ids=source_doc_ids,
+        query_embedding=query_embedding,
+        k=4,
+    )
 
     prompt = generate_explanation_prompt(
         question=question,
@@ -169,8 +197,6 @@ async def generate_answer_explanation(
 
     try:
         raw = await structured_explanation_llm.ainvoke(prompt)
-
-        # 🔑 enforce type
         return ExplanationOutput.model_validate(raw)
     except Exception as e:
         logger.error(f"Failed to generate explanation: {e}")
