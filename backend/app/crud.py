@@ -284,7 +284,9 @@ async def score_exam_attempt(
     session: Session,
     exam_attempt: ExamAttempt,
 ) -> float:
+    session.refresh(exam_attempt, attribute_names=["exam"])
     exam = exam_attempt.exam
+    assert exam is not None
     answers = exam_attempt.answers
 
     # 1. Score deterministically
