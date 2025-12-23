@@ -8,6 +8,8 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlmodel import Session
 
+from app.core.ai.embeddings import embed_text
+from app.core.ai.retrieval import retrieve_top_k_chunks
 from app.core.config import settings
 from app.models import (
     Document,
@@ -130,32 +132,38 @@ def generate_explanation_prompt(
     question: str,
     correct_answer: str,
     user_answer: str,
+    context_chunks: list[str],
 ) -> str:
+    context = "\n\n".join(context_chunks)
+
     return f"""
-You are a tutor helping a student understand a mistake.
+You are a tutor explaining why a student answer is incorrect.
 
 Question:
 {question}
 
-Student's answer:
-{user_answer}
-
 Correct answer:
 {correct_answer}
 
-Explain clearly:
-- Why the student's answer is incorrect
-- What the correct reasoning is
-- One short key takeaway
-- One thing the student should review
+Student answer:
+{user_answer}
 
-Be concise, supportive, and factual.
-Do NOT restate the question.
+Relevant study material:
+{context}
+
+Explain clearly using ONLY the material above.
+Avoid introducing new facts.
 """
+
+
+def normalize_uuid_list(values: list[str | UUID]) -> list[UUID]:
+    return [v if isinstance(v, UUID) else UUID(v) for v in values]
 
 
 async def generate_answer_explanation(
     *,
+    session: Session,
+    exam: Any,  # ideally Exam
     question: str,
     correct_answer: str,
     user_answer: str,
@@ -163,16 +171,32 @@ async def generate_answer_explanation(
     if not correct_answer:
         raise ValueError("Cannot generate explanation without a correct answer")
 
+    source_doc_ids = normalize_uuid_list(exam.source_document_ids)
+
+    query_text = (
+        f"Question: {question}\n"
+        f"Correct answer: {correct_answer}\n"
+        f"Student answer: {user_answer}"
+    )
+
+    query_embedding = embed_text(query_text)
+
+    context_chunks = retrieve_top_k_chunks(
+        session=session,
+        document_ids=source_doc_ids,
+        query_embedding=query_embedding,
+        k=4,
+    )
+
     prompt = generate_explanation_prompt(
         question=question,
         correct_answer=correct_answer,
         user_answer=user_answer,
+        context_chunks=context_chunks,
     )
 
     try:
         raw = await structured_explanation_llm.ainvoke(prompt)
-
-        # 🔑 enforce type
         return ExplanationOutput.model_validate(raw)
     except Exception as e:
         logger.error(f"Failed to generate explanation: {e}")

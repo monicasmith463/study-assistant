@@ -80,6 +80,7 @@ export type ExamPublic = {
     id: string;
     owner_id: string;
     questions?: Array<QuestionPublic>;
+    source_document_ids?: Array<string>;
 };
 
 export type ExamsPublic = {

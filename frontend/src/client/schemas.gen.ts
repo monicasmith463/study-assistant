@@ -488,6 +488,13 @@ export const ExamPublicSchema = {
             },
             type: 'array',
             title: 'Questions'
+        },
+        source_document_ids: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Source Document Ids'
         }
     },
     type: 'object',

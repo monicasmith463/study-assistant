@@ -116,13 +116,20 @@ def create_question(
     return QuestionPublic.model_validate(db_question)
 
 
-def create_db_exam(*, session: Session, exam_in: ExamCreate, owner_id: UUID) -> Exam:
+def create_db_exam(
+    *,
+    session: Session,
+    exam_in: ExamCreate,
+    owner_id: UUID,
+    source_document_ids: list[str],
+) -> Exam:
     db_exam = Exam(
         title=exam_in.title,
         description=exam_in.description,
         duration_minutes=exam_in.duration_minutes,
         is_published=exam_in.is_published,
         owner_id=owner_id,
+        source_document_ids=source_document_ids,
     )
     session.add(db_exam)
     session.commit()
@@ -212,22 +219,20 @@ def update_answers(
     return updated
 
 
-async def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> float:
-    total_questions = len(exam_attempt.answers)
+def score_answers(
+    answers: list[Answer],
+) -> tuple[int, int]:
+    """
+    Returns (correct_count, total_count)
+    """
     correct_count = 0
+    total = len(answers)
 
-    for answer in exam_attempt.answers:
+    for answer in answers:
         question = answer.question
 
-        # Skip if no correct answer key
-        if not question.correct_answer:
+        if not question.correct_answer or not answer.response:
             answer.is_correct = False
-            session.add(answer)
-            continue
-
-        if not answer.response:
-            answer.is_correct = False
-            session.add(answer)
             continue
 
         is_correct = (
@@ -235,26 +240,74 @@ async def score_exam_attempt(session: Session, exam_attempt: ExamAttempt) -> flo
         )
 
         answer.is_correct = is_correct
-        session.add(answer)
 
         if is_correct:
             correct_count += 1
 
-        else:
-            explanation_output = await generate_answer_explanation(
-                question=question.question,
-                correct_answer=question.correct_answer,
-                user_answer=answer.response,
-            )
-            answer.explanation = AnswerExplanation(
-                explanation=explanation_output.explanation,
-                key_takeaway=explanation_output.key_takeaway,
-                suggested_review=explanation_output.suggested_review,
-            )
+    return correct_count, total
 
-    score = (correct_count / total_questions) * 100 if total_questions else 0
+
+async def generate_explanations_for_incorrect_answers(
+    *,
+    session: Session,
+    exam: Exam,
+    answers: list[Answer],
+) -> None:
+    for answer in answers:
+        if answer.is_correct:
+            continue
+
+        question = answer.question
+
+        if not question.correct_answer or not answer.response:
+            continue
+
+        explanation = await generate_answer_explanation(
+            session=session,
+            exam=exam,
+            question=question.question,
+            correct_answer=question.correct_answer,
+            user_answer=answer.response,
+        )
+
+        answer.explanation = AnswerExplanation(
+            explanation=explanation.explanation,
+            key_takeaway=explanation.key_takeaway,
+            suggested_review=explanation.suggested_review,
+        )
+
+        session.add(answer)
+
+
+async def score_exam_attempt(
+    *,
+    session: Session,
+    exam_attempt: ExamAttempt,
+) -> float:
+    session.refresh(exam_attempt, attribute_names=["exam"])
+    exam = exam_attempt.exam
+    assert exam is not None
+    answers = exam_attempt.answers
+
+    # 1. Score deterministically
+    correct, total = score_answers(answers)
+
+    score = (correct / total) * 100 if total else 0
     exam_attempt.score = score
+
+    # Persist scoring results
     session.add(exam_attempt)
+    for a in answers:
+        session.add(a)
+    session.commit()
+
+    # 2. Generate explanations (AI side-effects)
+    await generate_explanations_for_incorrect_answers(
+        session=session,
+        exam=exam,
+        answers=answers,
+    )
+
     session.commit()
     session.refresh(exam_attempt)
 

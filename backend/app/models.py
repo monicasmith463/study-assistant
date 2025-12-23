@@ -1,14 +1,14 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
+from uuid import UUID
 
+from pgvector.sqlalchemy import Vector  # type: ignore
 from pydantic import BaseModel as PydanticBaseModel
-
-# from pgvector.sqlalchemy import Vector  # type: ignore
 from pydantic import EmailStr
 from pydantic import Field as PydanticField
 from sqlalchemy import Column, Text
-from sqlmodel import JSON, Field, Relationship, SQLModel
+from sqlmodel import JSON, Field, ForeignKey, Relationship, SQLModel
 from sqlmodel import Enum as SAEnum
 
 
@@ -103,12 +103,17 @@ class Exam(ExamBase, table=True):
     exam_attempts: list["ExamAttempt"] = Relationship(
         back_populates="exam", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+    source_document_ids: list[str] = Field(
+        default_factory=list,
+        sa_column=Column(JSON, nullable=False),
+    )
 
 
 class ExamPublic(ExamBase):
     id: uuid.UUID
     owner_id: uuid.UUID
     questions: list["QuestionPublic"] = PydanticField(default_factory=list)
+    source_document_ids: list[str] = PydanticField(default_factory=list)
 
 
 class ExamsPublic(SQLModel):
@@ -184,13 +189,14 @@ class ExamAttemptBase(SQLModel):
 class AnswerExplanation(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
-    answer_id: uuid.UUID = Field(
-        foreign_key="answer.id",
-        nullable=False,
-        unique=True,
-        index=True,
+    answer_id: UUID = Field(
+        sa_column=Column(
+            ForeignKey("answer.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+            index=True,
+        )
     )
-
     explanation: str = Field(sa_column=Column(Text, nullable=False))
     key_takeaway: str = Field(sa_column=Column(Text, nullable=False))
     suggested_review: str = Field(sa_column=Column(Text, nullable=False))
@@ -206,6 +212,7 @@ class AnswerBase(SQLModel):
 
 
 class ExplanationOutput(PydanticBaseModel):
+    model_config = {"from_attributes": True}
     explanation: str
     key_takeaway: str
     suggested_review: str
@@ -282,7 +289,7 @@ class Answer(AnswerBase, table=True):
     )
     explanation: AnswerExplanation | None = Relationship(
         back_populates="answer",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+        sa_relationship_kwargs={"uselist": False, "cascade": "all, delete-orphan"},
     )
 
 
@@ -338,7 +345,7 @@ class DocumentsPublic(SQLModel):
 class DocumentChunkBase(SQLModel):
     text: str
     # TODO: vectorize for RAG
-    # vector: list[float] | None = Field(default=None, sa_column=Column(Vector(1536)))
+    embedding: list[float] | None = Field(default=None, sa_column=Column(Vector(1536)))
 
 
 class DocumentChunk(DocumentChunkBase, table=True):

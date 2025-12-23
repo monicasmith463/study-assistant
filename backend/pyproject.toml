@@ -26,6 +26,7 @@ dependencies = [
     "textract>=1.6.5",
     "types-boto3>=1.40.47",
     "langchain-openai>=0.3.35",
+    "pgvector>=0.4.2",
 ]
 
 [tool.uv]

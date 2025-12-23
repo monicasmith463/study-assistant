@@ -33,7 +33,9 @@ def create_random_exam(
         is_published=False,
     )
 
-    db_exam = crud.create_db_exam(session=db, exam_in=exam_in, owner_id=owner_id)
+    db_exam = crud.create_db_exam(
+        session=db, exam_in=exam_in, owner_id=owner_id, source_document_ids=["fakeid1"]
+    )
 
     questions: list[QuestionCreate] = []
     if with_questions:
