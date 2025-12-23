@@ -1,13 +1,14 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
+from uuid import UUID
 
 from pgvector.sqlalchemy import Vector  # type: ignore
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import EmailStr
 from pydantic import Field as PydanticField
 from sqlalchemy import Column, Text
-from sqlmodel import JSON, Field, Relationship, SQLModel
+from sqlmodel import JSON, Field, ForeignKey, Relationship, SQLModel
 from sqlmodel import Enum as SAEnum
 
 
@@ -188,13 +189,14 @@ class ExamAttemptBase(SQLModel):
 class AnswerExplanation(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
-    answer_id: uuid.UUID = Field(
-        foreign_key="answer.id",
-        nullable=False,
-        unique=True,
-        index=True,
+    answer_id: UUID = Field(
+        sa_column=Column(
+            ForeignKey("answer.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+            index=True,
+        )
     )
-
     explanation: str = Field(sa_column=Column(Text, nullable=False))
     key_takeaway: str = Field(sa_column=Column(Text, nullable=False))
     suggested_review: str = Field(sa_column=Column(Text, nullable=False))
