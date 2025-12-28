@@ -1,14 +1,14 @@
-"use client";
-import React from "react";
-import RadioSm from "../../form/input/RadioSm";
+"use client"
+import React from "react"
+import RadioSm from "../../form/input/RadioSm"
 
 type ListWithRadioProps = {
-  name: string;
-  options: string[];
-  value?: string;
-  onChange: (value: string) => void;
-  error?: string;
-};
+  name: string
+  options: string[]
+  value?: string
+  onChange: (value: string) => void
+  error?: string
+}
 
 export default function ListWithRadio({
   name,
@@ -21,10 +21,8 @@ export default function ListWithRadio({
     <div>
       <div
         className={`rounded-lg border ${
-          error
-            ? "border-error-500"
-            : "border-gray-200 dark:border-gray-800"
-        } bg-white dark:bg-white/[0.03] sm:w-fit`}
+          error ? "border-error-500" : "border-gray-200 dark:border-gray-800"
+        } bg-white sm:w-fit dark:bg-white/[0.03]`}
       >
         <ul className="flex flex-col">
           {options.map((option, idx) => (
@@ -45,11 +43,7 @@ export default function ListWithRadio({
         </ul>
       </div>
 
-      {error && (
-        <p className="mt-2 text-sm text-error-500">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-error-500 mt-2 text-sm">{error}</p>}
     </div>
-  );
+  )
 }
