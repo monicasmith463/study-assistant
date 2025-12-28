@@ -10,15 +10,14 @@ def create_random_document(db: Session, user: User | None = None) -> DocumentPub
     user = user or create_random_user(db)
     owner_id = user.id
     assert owner_id is not None
-    title = random_lower_string()
-    extracted_text = f"Extracted text for {title} by {owner_id}"
+    filename_base = random_lower_string()
+    extracted_text = f"Extracted text for {filename_base} by {owner_id}"
     document_in = DocumentCreate(
-        filename=f"{title}.pdf",
+        filename=f"{filename_base}.pdf",
         content_type="application/pdf",
         size=1024,
-        s3_url=f"https://example-bucket.s3.amazonaws.com/{title}.pdf",
-        s3_key=f"{owner_id}/{title}.pdf",
-        title=title,
+        s3_url=f"https://example-bucket.s3.amazonaws.com/{filename_base}.pdf",
+        s3_key=f"{owner_id}/{filename_base}.pdf",
     )
     return crud.create_document(
         session=db,
