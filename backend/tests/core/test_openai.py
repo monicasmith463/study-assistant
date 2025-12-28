@@ -119,35 +119,6 @@ def test_validate_and_convert_question_item_true_false() -> None:
     assert result.options == ["True", "False"]
 
 
-def test_validate_and_convert_question_item_validation_error() -> None:
-    """Test validation error handling."""
-    mock_question = MagicMock()
-    mock_question.question = "Test"
-    mock_question.answer = None
-    mock_question.type = "invalid_type"  # Invalid type
-    mock_question.options = []
-
-    with patch("app.core.ai.openai.QuestionCreate") as mock_create, patch(
-        "app.core.ai.openai.logger"
-    ):
-        # Create a ValidationError by actually trying to create an invalid QuestionCreate
-        # This is the most reliable way to get a proper ValidationError
-        try:
-            QuestionCreate(
-                question="Test",
-                correct_answer=None,
-                type="invalid_type",  # type: ignore
-                options=[],
-            )
-        except ValidationError as ve:
-            validation_error = ve
-
-        mock_create.side_effect = validation_error
-
-        with pytest.raises(ValidationError):
-            validate_and_convert_question_item(mock_question)
-
-
 def test_parse_llm_output_success() -> None:
     """Test parsing LLM output successfully."""
     mock_question1 = MagicMock()

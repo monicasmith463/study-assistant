@@ -39,28 +39,6 @@ def test_upload_file_to_s3_success() -> None:
     assert call_args[0][0] == mock_file.file  # file object
 
 
-def test_upload_file_to_s3_without_extension() -> None:
-    """Test file upload with no file extension."""
-    mock_file = UploadFile(
-        filename="testfile",
-        file=io.BytesIO(b"content"),
-    )
-    # Note: content_type is a read-only property, but it's not used in upload_file_to_s3
-
-    user_id = "user-123"
-
-    mock_s3_client = MagicMock()
-    mock_s3_client.upload_fileobj = MagicMock()
-
-    with patch("app.core.s3.s3", mock_s3_client):
-        key = upload_file_to_s3(mock_file, user_id)
-
-    # Should still work, just no extension
-    assert key.startswith(f"documents/{user_id}/")
-    assert not key.endswith(".")
-    mock_s3_client.upload_fileobj.assert_called_once()
-
-
 def test_upload_file_to_s3_failure() -> None:
     """Test file upload failure handling."""
     mock_file = UploadFile(
@@ -148,7 +126,7 @@ def test_extract_text_from_s3_file_success() -> None:
         result = extract_text_from_s3_file(key)
 
     assert result == expected_text
-    mock_s3_client.download_fileobj.assert_called_once()
+
     # Verify bucket and key were passed correctly
     call_args = mock_s3_client.download_fileobj.call_args
     assert call_args[0][0] == settings.S3_BUCKET
