@@ -130,10 +130,19 @@ def test_validate_and_convert_question_item_validation_error() -> None:
     with patch("app.core.ai.openai.QuestionCreate") as mock_create, patch(
         "app.core.ai.openai.logger"
     ):
-        mock_create.side_effect = ValidationError.from_exception_data(
-            "QuestionCreate",
-            [{"type": "value_error", "loc": ("type",), "msg": "Invalid"}],
-        )
+        # Create a ValidationError by actually trying to create an invalid QuestionCreate
+        # This is the most reliable way to get a proper ValidationError
+        try:
+            QuestionCreate(
+                question="Test",
+                correct_answer=None,
+                type="invalid_type",  # type: ignore
+                options=[],
+            )
+        except ValidationError as ve:
+            validation_error = ve
+
+        mock_create.side_effect = validation_error
 
         with pytest.raises(ValidationError):
             validate_and_convert_question_item(mock_question)
@@ -254,10 +263,16 @@ async def test_generate_questions_from_documents_validation_error() -> None:
     ), patch("app.core.ai.openai.structured_question_llm", mock_llm), patch(
         "app.core.ai.openai.logger"
     ):
-        mock_llm.ainvoke.side_effect = ValidationError.from_exception_data(
-            "QuestionOutput",
-            [{"type": "value_error", "loc": ("questions",), "msg": "Invalid"}],
-        )
+        # Create a ValidationError by actually trying to create an invalid QuestionOutput
+        # This is the most reliable way to get a proper ValidationError
+        try:
+            from app.models import QuestionOutput
+
+            QuestionOutput(questions="invalid")  # type: ignore
+        except ValidationError as ve:
+            validation_error = ve
+
+        mock_llm.ainvoke.side_effect = validation_error
 
         with pytest.raises(HTTPException) as exc_info:
             await generate_questions_from_documents(mock_session, document_ids)
