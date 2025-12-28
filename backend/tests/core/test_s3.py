@@ -115,7 +115,7 @@ def test_extract_text_from_s3_file_success() -> None:
         file_obj.write(expected_text.encode("utf-8"))
         file_obj.seek(0)
 
-    mock_s3_client.download_fileobj = mock_download_fileobj
+    mock_s3_client.download_fileobj = MagicMock(side_effect=mock_download_fileobj)
 
     # Mock textract to return the expected text
     mock_textract_process = MagicMock(return_value=expected_text.encode("utf-8"))
