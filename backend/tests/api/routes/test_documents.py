@@ -241,10 +241,13 @@ def test_read_documents_as_normal_user(
     client: TestClient, normal_user_token_headers: dict[str, str], db: Session
 ) -> None:
     """Test reading documents as a normal user (should only see own documents)."""
+    from app import crud  # type: ignore
     from tests.utils.user import create_random_user  # type: ignore
 
-    # Create documents for the current user
-    current_user_doc = create_random_document(db)
+    # Get the current user from the token (EMAIL_TEST_USER)
+    current_user = crud.get_user_by_email(session=db, email=settings.EMAIL_TEST_USER)
+    assert current_user is not None, "Test user should exist"
+
     # Create document for another user
     other_user = create_random_user(db)
     create_random_document(db, user=other_user)
@@ -261,7 +264,7 @@ def test_read_documents_as_normal_user(
     assert len(content["data"]) >= 1
     # Verify all returned documents belong to the user
     for doc in content["data"]:
-        assert doc["owner_id"] == str(current_user_doc.owner_id)
+        assert doc["owner_id"] == str(current_user.id)
 
 
 def test_read_documents_pagination(
