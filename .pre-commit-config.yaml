@@ -26,12 +26,14 @@ repos:
       - id: ruff-format
   - repo: local
     hooks:
-      - id: local-biome-check
-        name: biome check
-        entry: bash -c 'cd frontend && npm run lint'
+      - id: frontend-lint
+        name: frontend lint and format
+        entry: bash -c 'cd frontend && (npm ci --silent 2>/dev/null || true) && npm run lint:fix && npm run format'
         language: system
         types: [text]
         files: ^frontend/
+        exclude: ^frontend/src/client/
+        pass_filenames: false
 
 ci:
   autofix_commit_msg: 🎨 [pre-commit.ci] Auto format from pre-commit.com hooks

@@ -1,6 +1,6 @@
-import type { ApiError } from "./client";
-import { ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import type { ApiError } from "./client"
+import { ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 /**
  * Combines and merges Tailwind CSS class names with conditional logic.
@@ -8,7 +8,7 @@ import { twMerge } from "tailwind-merge";
  * cn("bg-white", isActive && "text-black", "px-4") → "bg-white text-black px-4"
  */
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(...inputs));
+  return twMerge(clsx(...inputs))
 }
 
 /**
@@ -42,7 +42,7 @@ export const passwordRules = (isRequired = true) => {
 
 export const confirmPasswordRules = (
   getValues: () => any,
-  isRequired = true,
+  isRequired = true
 ) => {
   const rules: any = {
     validate: (value: string) => {
@@ -59,5 +59,5 @@ export const confirmPasswordRules = (
 }
 
 export const handleError = (err: ApiError) => {
-  console.log("API Error:", err);
-  }
+  console.log("API Error:", err)
+}
