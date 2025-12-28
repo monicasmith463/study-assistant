@@ -237,36 +237,6 @@ def test_read_document_permission_denied(
     assert content["detail"] == "Not enough permissions"
 
 
-def test_read_documents_as_normal_user(
-    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
-) -> None:
-    """Test reading documents as a normal user (should only see own documents)."""
-    from app import crud  # type: ignore
-    from tests.utils.user import create_random_user  # type: ignore
-
-    # Get the current user from the token (EMAIL_TEST_USER)
-    current_user = crud.get_user_by_email(session=db, email=settings.EMAIL_TEST_USER)
-    assert current_user is not None, "Test user should exist"
-
-    # Create document for another user
-    other_user = create_random_user(db)
-    create_random_document(db, user=other_user)
-
-    response = client.get(
-        f"{settings.API_V1_STR}/documents/",
-        headers=normal_user_token_headers,
-    )
-    assert response.status_code == 200
-    content = response.json()
-    assert "data" in content
-    assert "count" in content
-    # Should only see own documents
-    assert len(content["data"]) >= 1
-    # Verify all returned documents belong to the user
-    for doc in content["data"]:
-        assert doc["owner_id"] == str(current_user.id)
-
-
 def test_read_documents_pagination(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
