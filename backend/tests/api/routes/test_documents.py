@@ -30,30 +30,6 @@ def skip_test_create_document_real_s3(
     # assert "owner_id" in content
 
 
-def flakey_test_create_document(
-    client: TestClient, superuser_token_headers: dict[str, str]
-) -> None:
-    """Test creating a document with a file upload using mocked S3."""
-    file_content = b"%PDF-1.4 test file content"
-
-    with patch(
-        "app.api.routes.documents.upload_file_to_s3", return_value="document-slug"
-    ):
-        response = client.post(
-            f"{settings.API_V1_STR}/documents/",
-            headers=superuser_token_headers,
-            files={
-                "file": ("example.pdf", io.BytesIO(file_content), "application/pdf")
-            },
-        )
-
-    assert response.status_code == 200, "Unexpected response status code"
-    content = response.json()
-    assert "id" in content, "actual response: " + str(content)
-    assert "document-slug" in content["s3_url"], "S3 URL should match mocked value"
-    assert content["filename"] == "example.pdf", "Filename should match uploaded file"
-
-
 def test_read_document(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
@@ -144,3 +120,225 @@ def test_delete_document_not_enough_permissions(
     assert response.status_code == 400
     content = response.json()
     assert content["detail"] == "Not enough permissions"
+
+
+def test_create_document_success(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    """Test creating a document with a file upload using mocked S3."""
+    file_content = b"%PDF-1.4 test file content"
+    mock_key = "documents/user-id/test-uuid.pdf"
+
+    with patch(
+        "app.api.routes.documents.upload_file_to_s3", return_value=mock_key
+    ), patch(
+        "app.api.routes.documents.generate_s3_url",
+        return_value=f"https://bucket.s3.amazonaws.com/{mock_key}",
+    ), patch("app.api.routes.documents.extract_text_and_save_to_db"):
+        response = client.post(
+            f"{settings.API_V1_STR}/documents/",
+            headers=superuser_token_headers,
+            files={
+                "file": ("example.pdf", io.BytesIO(file_content), "application/pdf")
+            },
+        )
+
+    assert (
+        response.status_code == 200
+    ), f"Unexpected status: {response.status_code}, body: {response.text}"
+    content = response.json()
+    assert "id" in content
+    assert content["filename"] == "example.pdf"
+    assert content["content_type"] == "application/pdf"
+    assert content["size"] == len(file_content)
+    assert mock_key in content["s3_url"]
+    assert content["s3_key"] == mock_key
+
+
+def test_create_document_s3_upload_failure(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    """Test creating a document when S3 upload fails."""
+    file_content = b"%PDF-1.4 test file content"
+
+    with patch(
+        "app.api.routes.documents.upload_file_to_s3",
+        side_effect=Exception("S3 upload failed"),
+    ):
+        response = client.post(
+            f"{settings.API_V1_STR}/documents/",
+            headers=superuser_token_headers,
+            files={
+                "file": ("example.pdf", io.BytesIO(file_content), "application/pdf")
+            },
+        )
+
+    assert response.status_code == 500
+    content = response.json()
+    assert "Failed to upload file" in content["detail"]
+
+
+def test_create_document_url_generation_failure(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    """Test creating a document when URL generation fails."""
+    file_content = b"%PDF-1.4 test file content"
+    mock_key = "documents/user-id/test-uuid.pdf"
+
+    with patch(
+        "app.api.routes.documents.upload_file_to_s3", return_value=mock_key
+    ), patch(
+        "app.api.routes.documents.generate_s3_url",
+        side_effect=Exception("URL generation failed"),
+    ):
+        response = client.post(
+            f"{settings.API_V1_STR}/documents/",
+            headers=superuser_token_headers,
+            files={
+                "file": ("example.pdf", io.BytesIO(file_content), "application/pdf")
+            },
+        )
+
+    assert response.status_code == 500
+    content = response.json()
+    assert "Could not generate URL" in content["detail"]
+
+
+def test_read_document_not_found(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    """Test reading a document that doesn't exist."""
+    non_existent_id = uuid.uuid4()
+    response = client.get(
+        f"{settings.API_V1_STR}/documents/{non_existent_id}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Document not found"
+
+
+def test_read_document_permission_denied(
+    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test reading a document owned by another user."""
+    from tests.utils.user import create_random_user  # type: ignore
+
+    # Create document owned by a different user
+    other_user = create_random_user(db)
+    document = create_random_document(db, user=other_user)
+
+    response = client.get(
+        f"{settings.API_V1_STR}/documents/{document.id}",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 400
+    content = response.json()
+    assert content["detail"] == "Not enough permissions"
+
+
+def test_read_documents_pagination(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test reading documents with pagination."""
+    # Create multiple documents
+    for _ in range(5):
+        create_random_document(db)
+
+    # Test with skip and limit
+    response = client.get(
+        f"{settings.API_V1_STR}/documents/?skip=0&limit=2",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert len(content["data"]) <= 2
+    assert content["count"] >= 5
+
+    # Test second page
+    response = client.get(
+        f"{settings.API_V1_STR}/documents/?skip=2&limit=2",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert len(content["data"]) <= 2
+
+
+def test_update_document_not_found(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    """Test updating a document that doesn't exist."""
+    non_existent_id = uuid.uuid4()
+    data = {"filename": "updated.pdf"}
+    response = client.put(
+        f"{settings.API_V1_STR}/documents/{non_existent_id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Document not found"
+
+
+def test_update_document_permission_denied(
+    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test updating a document owned by another user."""
+    from tests.utils.user import create_random_user  # type: ignore
+
+    # Create document owned by a different user
+    other_user = create_random_user(db)
+    document = create_random_document(db, user=other_user)
+
+    data = {"filename": "updated.pdf"}
+    response = client.put(
+        f"{settings.API_V1_STR}/documents/{document.id}",
+        headers=normal_user_token_headers,
+        json=data,
+    )
+    assert response.status_code == 400
+    content = response.json()
+    assert content["detail"] == "Not enough permissions"
+
+
+def test_update_document_partial_update(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test updating only some fields of a document."""
+    document = create_random_document(db)
+    original_size = document.size
+
+    # Update only filename
+    data = {"filename": "updated-filename.pdf"}
+    response = client.put(
+        f"{settings.API_V1_STR}/documents/{document.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["filename"] == "updated-filename.pdf"
+    # Other fields should remain unchanged
+    assert content["size"] == original_size
+
+
+def test_update_document_multiple_fields(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test updating multiple fields of a document."""
+    document = create_random_document(db)
+
+    data = {
+        "filename": "updated-multiple.pdf",
+        "s3_key": "updated/key/path.pdf",
+    }
+    response = client.put(
+        f"{settings.API_V1_STR}/documents/{document.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["filename"] == "updated-multiple.pdf"
+    assert content["s3_key"] == "updated/key/path.pdf"

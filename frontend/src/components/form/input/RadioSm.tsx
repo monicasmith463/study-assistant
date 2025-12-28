@@ -1,13 +1,13 @@
-import React from "react";
+import React from "react"
 
 interface RadioProps {
-  id: string; // Unique ID for the radio button
-  name: string; // Group name for the radio button
-  value: string; // Value of the radio button
-  checked: boolean; // Whether the radio button is checked
-  label: string; // Label text for the radio button
-  onChange: (value: string) => void; // Handler for when the radio button is toggled
-  className?: string; // Optional custom classes for styling
+  id: string // Unique ID for the radio button
+  name: string // Group name for the radio button
+  value: string // Value of the radio button
+  checked: boolean // Whether the radio button is checked
+  label: string // Label text for the radio button
+  onChange: (value: string) => void // Handler for when the radio button is toggled
+  className?: string // Optional custom classes for styling
 }
 
 const RadioSm: React.FC<RadioProps> = ({
@@ -22,7 +22,7 @@ const RadioSm: React.FC<RadioProps> = ({
   return (
     <label
       htmlFor={id}
-      className={`flex cursor-pointer select-none items-center text-sm text-gray-500 dark:text-gray-400 ${className}`}
+      className={`flex cursor-pointer items-center text-sm text-gray-500 select-none dark:text-gray-400 ${className}`}
     >
       <span className="relative">
         {/* Hidden Input */}
@@ -40,7 +40,7 @@ const RadioSm: React.FC<RadioProps> = ({
           className={`mr-2 flex h-4 w-4 items-center justify-center rounded-full border ${
             checked
               ? "border-brand-500 bg-brand-500"
-              : "bg-transparent border-gray-300 dark:border-gray-700"
+              : "border-gray-300 bg-transparent dark:border-gray-700"
           }`}
         >
           {/* Inner Dot */}
@@ -53,7 +53,7 @@ const RadioSm: React.FC<RadioProps> = ({
       </span>
       {label}
     </label>
-  );
-};
+  )
+}
 
-export default RadioSm;
+export default RadioSm

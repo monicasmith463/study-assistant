@@ -1,10 +1,10 @@
-import Image from "next/image";
-import React from "react";
+import Image from "next/image"
+import React from "react"
 
 export default function GridShape() {
   return (
     <>
-      <div className="absolute right-0 top-0 -z-1 w-full max-w-[250px] xl:max-w-[450px]">
+      <div className="absolute top-0 right-0 -z-1 w-full max-w-[250px] xl:max-w-[450px]">
         <Image
           width={540}
           height={254}
@@ -21,5 +21,5 @@ export default function GridShape() {
         />
       </div>
     </>
-  );
+  )
 }
