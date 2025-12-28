@@ -1,10 +1,10 @@
 from langchain_text_splitters import CharacterTextSplitter
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from app.core.ai.embeddings import get_embeddings_model
 from app.core.db import engine
 from app.core.s3 import extract_text_from_s3_file
-from app.models import Document, DocumentChunk
+from app.models import Document, DocumentChunk, DocumentStatus
 
 embeddings_model = get_embeddings_model()
 
@@ -58,25 +58,32 @@ def embed_chunks(chunks: list[str]) -> list[list[float]]:
 
 
 def extract_text_and_save_to_db(s3_key: str, document_id: str) -> None:
-    try:
-        with Session(engine) as session:
+    with Session(engine) as session:
+        document = session.get(Document, document_id)
+        if not document:
+            raise Exception("Document not found")
+
+        try:
+            # 1️⃣ mark processing
+            document.status = DocumentStatus.PROCESSING
+            session.add(document)
+            session.commit()
+
             text = extract_text_from_s3_file(key=s3_key)
-
             chunks = perform_fixed_size_chunking(text)
-
-            document_query = select(Document).where(Document.id == document_id)
-            document = session.exec(document_query).first()
-
-            if not document:
-                raise Exception(f"Document with ID {document_id} not found")
 
             save_chunks_to_db(session, document_id, chunks)
 
             document.extracted_text = text
             document.chunk_count = len(chunks)
+            document.status = DocumentStatus.READY
 
             session.add(document)
             session.commit()
 
-    except Exception as e:
-        raise e
+        except Exception as e:
+            document.status = DocumentStatus.FAILED
+            document.processing_error = str(e)
+            session.add(document)
+            session.commit()
+            raise

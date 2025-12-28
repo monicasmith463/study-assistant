@@ -141,6 +141,13 @@ class QuestionType(str, Enum):
     TRUE_FALSE = "true_false"
 
 
+class DocumentStatus(str, Enum):
+    UPLOADED = "uploaded"
+    PROCESSING = "processing"
+    READY = "ready"
+    FAILED = "failed"
+
+
 class QuestionBase(SQLModel):
     question: str = Field(sa_column=Column(Text, nullable=False))
 
@@ -317,15 +324,26 @@ class DocumentUpdate(DocumentBase):
 # Database model, database table inferred from class name
 class Document(DocumentBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
     owner: User | None = Relationship(back_populates="documents")
+
+    status: DocumentStatus = Field(
+        default=DocumentStatus.PROCESSING,
+        sa_column=Column(
+            SAEnum(DocumentStatus, name="document_status"),
+            nullable=False,
+        ),
+    )
+
     extracted_text: str | None = Field(
         default=None, sa_column=Column(Text, nullable=True)
     )
+
     chunks: list["DocumentChunk"] = Relationship(back_populates="document")
-    chunk_count: int = 0  # Number of chunks created for this document
+    chunk_count: int = 0
 
 
 class DocumentPublic(DocumentBase):
@@ -335,6 +353,7 @@ class DocumentPublic(DocumentBase):
     content_type: str | None = None
     size: int | None = None
     extracted_text: str | None = None
+    status: DocumentStatus
 
 
 class DocumentsPublic(SQLModel):
