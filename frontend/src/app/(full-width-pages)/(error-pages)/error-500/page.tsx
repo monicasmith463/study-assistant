@@ -49,7 +49,7 @@ export default function Error500() {
 
       {/* <!-- Footer --> */}
       <p className="absolute text-sm text-center text-gray-500 -translate-x-1/2 bottom-6 left-1/2 dark:text-gray-400">
-        &copy; {new Date().getFullYear()} - Sudy Assistant
+        &copy; {new Date().getFullYear()} - Study Assistant
       </p>
     </div>
   );
