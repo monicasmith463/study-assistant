@@ -8,8 +8,13 @@ export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false)
   const { logout, user } = useAuth()
 
-  const username = user?.full_name || "Guest"
-  const email = user?.email || ""
+  // Don't render if user is not loaded yet
+  if (!user) {
+    return null
+  }
+
+  const username = user.full_name || user.email || "User"
+  const email = user.email || ""
 
   function toggleDropdown() {
     setIsOpen(!isOpen)
