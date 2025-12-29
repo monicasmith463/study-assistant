@@ -78,12 +78,11 @@ const DropzoneComponent: React.FC = () => {
     },
 
     onSuccess: (data) => {
-      console.log("data", data)
       router.push(`/take-exam?exam_id=${data.id}`)
     },
 
-    onError: (err: unknown) => {
-      console.error("Generate exam failed:", err)
+    onError: () => {
+      router.push("/error-500")
     },
   })
 
