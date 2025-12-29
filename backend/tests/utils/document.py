@@ -35,7 +35,7 @@ def create_random_document(
             db_document.status = status
         elif extracted_text is not None:
             # If extracted_text is set, document should be READY
-            db_document.status = DocumentStatus.READY
+            db_document.status = DocumentStatus("ready")
         if status is not None or extracted_text is not None:
             db.add(db_document)
             db.commit()

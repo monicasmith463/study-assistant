@@ -357,7 +357,7 @@ def test_read_document_with_processing_status(
     """Test reading a document with processing status."""
     from app.models import DocumentStatus
 
-    document = create_random_document(db, status=DocumentStatus.PROCESSING)
+    document = create_random_document(db, status=DocumentStatus("processing"))
     response = client.get(
         f"{settings.API_V1_STR}/documents/{document.id}",
         headers=superuser_token_headers,
@@ -373,7 +373,7 @@ def test_read_document_with_ready_status(
     """Test reading a document with ready status."""
     from app.models import DocumentStatus
 
-    document = create_random_document(db, status=DocumentStatus.READY)
+    document = create_random_document(db, status=DocumentStatus("ready"))
     response = client.get(
         f"{settings.API_V1_STR}/documents/{document.id}",
         headers=superuser_token_headers,
@@ -389,7 +389,7 @@ def test_read_document_with_failed_status(
     """Test reading a document with failed status."""
     from app.models import Document, DocumentStatus
 
-    document = create_random_document(db, status=DocumentStatus.FAILED)
+    document = create_random_document(db, status=DocumentStatus("failed"))
     # Set processing_error for failed documents
     db_document = db.get(Document, document.id)
     if db_document:
@@ -413,8 +413,8 @@ def test_read_documents_includes_status(
     """Test that reading documents list includes status field."""
     from app.models import DocumentStatus
 
-    create_random_document(db, status=DocumentStatus.PROCESSING)
-    create_random_document(db, status=DocumentStatus.READY)
+    create_random_document(db, status=DocumentStatus("processing"))
+    create_random_document(db, status=DocumentStatus("ready"))
     response = client.get(
         f"{settings.API_V1_STR}/documents/",
         headers=superuser_token_headers,
@@ -434,7 +434,7 @@ def test_update_document_status_preserved(
     """Test that updating a document preserves its status."""
     from app.models import DocumentStatus
 
-    document = create_random_document(db, status=DocumentStatus.READY)
+    document = create_random_document(db, status=DocumentStatus("ready"))
 
     data = {"filename": "updated.pdf"}
     response = client.put(

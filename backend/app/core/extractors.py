@@ -72,13 +72,13 @@ def extract_text_and_save_to_db(s3_key: str, document_id: str) -> None:
 
             document.extracted_text = text
             document.chunk_count = len(chunks)
-            document.status = DocumentStatus.READY
+            document.status = DocumentStatus.ready
 
             session.add(document)
             session.commit()
 
         except Exception as e:
-            document.status = DocumentStatus.FAILED
+            document.status = DocumentStatus.failed
             document.processing_error = str(e)
             session.add(document)
             session.commit()
