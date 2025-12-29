@@ -125,9 +125,9 @@ class QuestionType(str, Enum):
 
 
 class DocumentStatus(str, Enum):
-    PROCESSING = "processing"
-    READY = "ready"
-    FAILED = "failed"
+    processing = "processing"
+    ready = "ready"
+    failed = "failed"
 
 
 class QuestionBase(SQLModel):
@@ -315,7 +315,7 @@ class Document(DocumentBase, table=True):
     owner: User | None = Relationship(back_populates="documents")
 
     status: DocumentStatus = Field(
-        default=DocumentStatus.PROCESSING,
+        default=DocumentStatus.processing,
         sa_column=Column(
             SQLAEnum(DocumentStatus, name="document_status", native_enum=False),
             nullable=False,
