@@ -48,7 +48,7 @@ def test_read_document(
     assert content["id"] == str(document.id)
     assert content["owner_id"] == str(document.owner_id)
     assert "status" in content
-    assert content["status"] in ["uploaded", "processing", "ready", "failed"]
+    assert content["status"] in ["processing", "ready", "failed"]
 
 
 def test_read_documents(
@@ -85,7 +85,7 @@ def test_update_document(
     assert content["id"] == str(document.id)
     assert content["owner_id"] == str(document.owner_id)
     assert "status" in content
-    assert content["status"] in ["uploaded", "processing", "ready", "failed"]
+    assert content["status"] in ["processing", "ready", "failed"]
 
 
 def test_delete_document(
@@ -407,22 +407,6 @@ def test_read_document_with_failed_status(
     assert content["status"] == "failed"
 
 
-def test_read_document_with_uploaded_status(
-    client: TestClient, superuser_token_headers: dict[str, str], db: Session
-) -> None:
-    """Test reading a document with uploaded status."""
-    from app.models import DocumentStatus
-
-    document = create_random_document(db, status=DocumentStatus.UPLOADED)
-    response = client.get(
-        f"{settings.API_V1_STR}/documents/{document.id}",
-        headers=superuser_token_headers,
-    )
-    assert response.status_code == 200
-    content = response.json()
-    assert content["status"] == "uploaded"
-
-
 def test_read_documents_includes_status(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
@@ -441,7 +425,7 @@ def test_read_documents_includes_status(
     # All documents should have status field
     for doc in content["data"]:
         assert "status" in doc
-        assert doc["status"] in ["uploaded", "processing", "ready", "failed"]
+        assert doc["status"] in ["processing", "ready", "failed"]
 
 
 def test_update_document_status_preserved(
