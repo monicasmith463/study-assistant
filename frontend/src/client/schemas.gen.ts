@@ -241,7 +241,7 @@ export const DocumentPublicSchema = {
 
 export const DocumentStatusSchema = {
     type: 'string',
-    enum: ['uploaded', 'processing', 'ready', 'failed'],
+    enum: ['processing', 'ready', 'failed'],
     title: 'DocumentStatus'
 } as const;
 
