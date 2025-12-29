@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { ExamsService, type ExamPublic } from "@/client"
-import { createExamAttempt, type ExamAttemptPublic } from "@/api/examAttempts"
+import { ExamsService, type ExamPublic, type ExamAttemptPublic } from "@/client"
+import { createExamAttempt } from "@/api/examAttempts"
 
 export function useExam(examId: string | null) {
   return useQuery<ExamPublic>({
