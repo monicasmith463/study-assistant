@@ -8,8 +8,8 @@ from pydantic import BaseModel as PydanticBaseModel
 from pydantic import EmailStr
 from pydantic import Field as PydanticField
 from sqlalchemy import Column, Text
+from sqlalchemy import Enum as SQLAEnum
 from sqlmodel import JSON, Field, ForeignKey, Relationship, SQLModel
-from sqlmodel import Enum as SAEnum
 
 
 # Shared properties
@@ -124,10 +124,18 @@ class QuestionType(str, Enum):
     TRUE_FALSE = "true_false"
 
 
+class DocumentStatus(str, Enum):
+    processing = "processing"
+    ready = "ready"
+    failed = "failed"
+
+
 class QuestionBase(SQLModel):
     question: str = Field(sa_column=Column(Text, nullable=False))
 
-    type: QuestionType = Field(sa_column=Column(SAEnum(QuestionType), nullable=False))
+    type: QuestionType = Field(
+        sa_column=Column(SQLAEnum(QuestionType, native_enum=False), nullable=False)
+    )
 
     options: list[str] = Field(sa_column=Column(JSON, nullable=False))
 
@@ -300,15 +308,30 @@ class DocumentUpdate(DocumentBase):
 # Database model, database table inferred from class name
 class Document(DocumentBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
     owner: User | None = Relationship(back_populates="documents")
+
+    status: DocumentStatus = Field(
+        default=DocumentStatus.processing,
+        sa_column=Column(
+            SQLAEnum(DocumentStatus, name="document_status", native_enum=False),
+            nullable=False,
+        ),
+    )
+
     extracted_text: str | None = Field(
         default=None, sa_column=Column(Text, nullable=True)
     )
+
     chunks: list["DocumentChunk"] = Relationship(back_populates="document")
-    chunk_count: int = 0  # Number of chunks created for this document
+    chunk_count: int = 0
+    processing_error: str | None = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True),
+    )
 
 
 class DocumentPublic(DocumentBase):
@@ -318,6 +341,7 @@ class DocumentPublic(DocumentBase):
     content_type: str | None = None
     size: int | None = None
     extracted_text: str | None = None
+    status: DocumentStatus
 
 
 class DocumentsPublic(SQLModel):

@@ -229,11 +229,20 @@ export const DocumentPublicSchema = {
                 }
             ],
             title: 'Extracted Text'
+        },
+        status: {
+            '$ref': '#/components/schemas/DocumentStatus'
         }
     },
     type: 'object',
-    required: ['filename', 'id', 'owner_id'],
+    required: ['filename', 'id', 'owner_id', 'status'],
     title: 'DocumentPublic'
+} as const;
+
+export const DocumentStatusSchema = {
+    type: 'string',
+    enum: ['processing', 'ready', 'failed'],
+    title: 'DocumentStatus'
 } as const;
 
 export const DocumentUpdateSchema = {

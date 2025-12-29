@@ -2,6 +2,7 @@
 import React, { useState } from "react"
 import FaqOne from "./FaqOne"
 import type { QuestionPublic, AnswerPublic } from "@/client"
+import Badge from "@/components/ui/badge/Badge"
 
 type Props = {
   questions: QuestionPublic[]
@@ -39,46 +40,84 @@ export default function ScoreExamAccordion({ questions, answers }: Props) {
         const isWrong = answer?.is_correct === false
         const explanation = answer?.explanation
 
-        const statusIcon = isCorrect ? "✅" : isWrong ? "❌" : "⏳"
+        const statusBadge = isCorrect ? (
+          <span className="mr-2">
+            <Badge color="success" size="sm" variant="light">
+              Correct
+            </Badge>
+          </span>
+        ) : isWrong ? (
+          <span className="mr-2">
+            <Badge color="error" size="sm" variant="light">
+              Incorrect
+            </Badge>
+          </span>
+        ) : (
+          <span className="mr-2">
+            <Badge color="warning" size="sm" variant="light">
+              Not answered
+            </Badge>
+          </span>
+        )
 
         return (
           <FaqOne
             key={q.id}
-            title={`${statusIcon} ${q.question}`}
+            title={
+              <span className="flex items-center">
+                {statusBadge}
+                {q.question}
+              </span>
+            }
             isOpen={openIndexes.includes(index)}
             toggleAccordion={() => handleToggle(index)}
             content={
-              <div className="space-y-3 text-sm">
+              <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
                 <p>
-                  <strong>Your answer:</strong>{" "}
+                  <strong className="text-gray-800 dark:text-white/90">
+                    Your answer:
+                  </strong>{" "}
                   {answer?.response || "Not answered"}
                 </p>
 
                 {q.correct_answer && (
                   <p>
-                    <strong>Correct answer:</strong> {q.correct_answer}
+                    <strong className="text-gray-800 dark:text-white/90">
+                      Correct answer:
+                    </strong>{" "}
+                    {q.correct_answer}
                   </p>
                 )}
 
                 {isWrong && explanation && typeof explanation === "object" && (
                   <div className="mt-2 space-y-2">
-                    <p className="text-gray-700">
-                      <strong>Explanation:</strong> {explanation.explanation}
+                    <p>
+                      <strong className="text-gray-800 dark:text-white/90">
+                        Explanation:
+                      </strong>{" "}
+                      {explanation.explanation}
                     </p>
 
-                    <p className="text-gray-700">
-                      <strong>Key takeaway:</strong> {explanation.key_takeaway}
+                    <p>
+                      <strong className="text-gray-800 dark:text-white/90">
+                        Key takeaway:
+                      </strong>{" "}
+                      {explanation.key_takeaway}
                     </p>
 
-                    <p className="text-gray-700">
-                      <strong>Suggested review:</strong>{" "}
+                    <p>
+                      <strong className="text-gray-800 dark:text-white/90">
+                        Suggested review:
+                      </strong>{" "}
                       {explanation.suggested_review}
                     </p>
                   </div>
                 )}
 
                 {isWrong && !explanation && (
-                  <p className="mt-2 text-gray-500">No explanation provided.</p>
+                  <p className="mt-2 text-gray-500 dark:text-gray-400">
+                    No explanation provided.
+                  </p>
                 )}
               </div>
             }

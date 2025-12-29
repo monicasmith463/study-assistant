@@ -38,12 +38,15 @@ export type DocumentPublic = {
     id: string;
     owner_id: string;
     extracted_text?: (string | null);
+    status: DocumentStatus;
 };
 
 export type DocumentsPublic = {
     data: Array<DocumentPublic>;
     count: number;
 };
+
+export type DocumentStatus = 'processing' | 'ready' | 'failed';
 
 export type DocumentUpdate = {
     filename?: (string | null);
