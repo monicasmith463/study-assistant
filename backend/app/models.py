@@ -327,6 +327,10 @@ class Document(DocumentBase, table=True):
 
     chunks: list["DocumentChunk"] = Relationship(back_populates="document")
     chunk_count: int = 0
+    processing_error: str | None = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True),
+    )
 
 
 class DocumentPublic(DocumentBase):
