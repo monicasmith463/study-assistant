@@ -57,9 +57,18 @@ export default function TakeExamForm() {
   }
 
   /* -------------------- States -------------------- */
-  if (!examId) return <div>Invalid exam</div>
-  if (examQuery.isLoading) return <div>Loading exam...</div>
-  if (examQuery.isError) return <div>Failed to load exam</div>
+  if (!examId)
+    return <div className="text-gray-800 dark:text-white/90">Invalid exam</div>
+  if (examQuery.isLoading)
+    return (
+      <div className="text-gray-800 dark:text-white/90">Loading exam...</div>
+    )
+  if (examQuery.isError)
+    return (
+      <div className="text-gray-800 dark:text-white/90">
+        Failed to load exam
+      </div>
+    )
 
   const exam = examQuery.data
 
@@ -79,7 +88,9 @@ export default function TakeExamForm() {
 
             return (
               <div key={q.id} className="col-span-full">
-                <p className="mb-2 font-medium text-gray-800">{q.question}</p>
+                <p className="mb-2 font-medium text-gray-800 dark:text-white/90">
+                  {q.question}
+                </p>
 
                 <Controller
                   name={`answers.${q.id}`}
