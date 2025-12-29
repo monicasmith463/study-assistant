@@ -64,11 +64,7 @@ def extract_text_and_save_to_db(s3_key: str, document_id: str) -> None:
             raise Exception("Document not found")
 
         try:
-            # 1️⃣ mark processing
-            document.status = DocumentStatus.PROCESSING
-            session.add(document)
-            session.commit()
-
+            # Extract text and process (document already has PROCESSING status by default)
             text = extract_text_from_s3_file(key=s3_key)
             chunks = perform_fixed_size_chunking(text)
 

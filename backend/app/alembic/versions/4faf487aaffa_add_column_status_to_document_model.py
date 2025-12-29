@@ -18,10 +18,10 @@ depends_on = None
 
 def upgrade():
     document_status_enum = sa.Enum(
-        "UPLOADED",
-        "PROCESSING",
-        "READY",
-        "FAILED",
+        "uploaded",
+        "processing",
+        "ready",
+        "failed",
         name="document_status",
     )
 
@@ -35,7 +35,7 @@ def upgrade():
             "status",
             document_status_enum,
             nullable=False,
-            server_default="PROCESSING",
+            server_default="processing",
         ),
     )
 
@@ -46,10 +46,10 @@ def downgrade():
     op.drop_column("document", "status")
 
     document_status_enum = sa.Enum(
-        "UPLOADED",
-        "PROCESSING",
-        "READY",
-        "FAILED",
+        "uploaded",
+        "processing",
+        "ready",
+        "failed",
         name="document_status",
     )
     document_status_enum.drop(op.get_bind(), checkfirst=True)
