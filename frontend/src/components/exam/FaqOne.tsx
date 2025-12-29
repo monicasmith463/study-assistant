@@ -2,7 +2,7 @@ import React from "react"
 import { ChevronDownIcon } from "../../icons"
 
 type FaqOneProps = {
-  title: string
+  title: string | React.ReactNode
   content: React.ReactNode
   isOpen: boolean
   toggleAccordion: () => void

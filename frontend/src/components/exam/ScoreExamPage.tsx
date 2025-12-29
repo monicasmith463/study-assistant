@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import ComponentCard from "@/components/common/ComponentCard"
 import ScoreExamAccordion from "@/components/exam/ScoreExamAccordion"
+import YourScore from "@/components/exam/YourScore"
 import { fetchExamAttempt } from "@/api/examAttempts"
 import type { ExamAttemptPublic } from "@/client"
 
@@ -32,13 +33,14 @@ export default function ScoreExamPage() {
   const attempt = examQuery.data
 
   const answers = attempt?.answers ?? []
+  const questions = attempt?.exam?.questions ?? []
+  const totalQuestions = questions.length
+  const score = attempt?.score
 
   return (
     <ComponentCard title="Exam Results">
-      <ScoreExamAccordion
-        questions={attempt?.exam?.questions ?? []}
-        answers={answers}
-      />
+      <YourScore score={score} total={totalQuestions} />
+      <ScoreExamAccordion questions={questions} answers={answers} />
     </ComponentCard>
   )
 }
