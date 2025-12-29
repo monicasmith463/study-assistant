@@ -47,6 +47,8 @@ def test_read_document(
     assert content["s3_key"] == document.s3_key
     assert content["id"] == str(document.id)
     assert content["owner_id"] == str(document.owner_id)
+    assert "status" in content
+    assert content["status"] in ["uploaded", "processing", "ready", "failed"]
 
 
 def test_read_documents(
@@ -82,6 +84,8 @@ def test_update_document(
     assert content["s3_key"] == "UpdatedKey"
     assert content["id"] == str(document.id)
     assert content["owner_id"] == str(document.owner_id)
+    assert "status" in content
+    assert content["status"] in ["uploaded", "processing", "ready", "failed"]
 
 
 def test_delete_document(
@@ -153,6 +157,8 @@ def test_create_document_success(
     assert content["size"] == len(file_content)
     assert mock_key in content["s3_url"]
     assert content["s3_key"] == mock_key
+    assert "status" in content
+    assert content["status"] == "processing"  # New documents start as processing
 
 
 def test_create_document_s3_upload_failure(
@@ -342,3 +348,118 @@ def test_update_document_multiple_fields(
     content = response.json()
     assert content["filename"] == "updated-multiple.pdf"
     assert content["s3_key"] == "updated/key/path.pdf"
+    assert "status" in content  # Status should still be present
+
+
+def test_read_document_with_processing_status(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test reading a document with processing status."""
+    from app.models import DocumentStatus
+
+    document = create_random_document(db, status=DocumentStatus.PROCESSING)
+    response = client.get(
+        f"{settings.API_V1_STR}/documents/{document.id}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["status"] == "processing"
+
+
+def test_read_document_with_ready_status(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test reading a document with ready status."""
+    from app.models import DocumentStatus
+
+    document = create_random_document(db, status=DocumentStatus.READY)
+    response = client.get(
+        f"{settings.API_V1_STR}/documents/{document.id}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["status"] == "ready"
+
+
+def test_read_document_with_failed_status(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test reading a document with failed status."""
+    from app.models import Document, DocumentStatus
+
+    document = create_random_document(db, status=DocumentStatus.FAILED)
+    # Set processing_error for failed documents
+    db_document = db.get(Document, document.id)
+    if db_document:
+        db_document.processing_error = "Test error message"
+        db.add(db_document)
+        db.commit()
+        db.refresh(db_document)
+
+    response = client.get(
+        f"{settings.API_V1_STR}/documents/{document.id}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["status"] == "failed"
+
+
+def test_read_document_with_uploaded_status(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test reading a document with uploaded status."""
+    from app.models import DocumentStatus
+
+    document = create_random_document(db, status=DocumentStatus.UPLOADED)
+    response = client.get(
+        f"{settings.API_V1_STR}/documents/{document.id}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["status"] == "uploaded"
+
+
+def test_read_documents_includes_status(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test that reading documents list includes status field."""
+    from app.models import DocumentStatus
+
+    create_random_document(db, status=DocumentStatus.PROCESSING)
+    create_random_document(db, status=DocumentStatus.READY)
+    response = client.get(
+        f"{settings.API_V1_STR}/documents/",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert len(content["data"]) >= 2
+    # All documents should have status field
+    for doc in content["data"]:
+        assert "status" in doc
+        assert doc["status"] in ["uploaded", "processing", "ready", "failed"]
+
+
+def test_update_document_status_preserved(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test that updating a document preserves its status."""
+    from app.models import DocumentStatus
+
+    document = create_random_document(db, status=DocumentStatus.READY)
+    original_status = document.status
+
+    data = {"filename": "updated.pdf"}
+    response = client.put(
+        f"{settings.API_V1_STR}/documents/{document.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["filename"] == "updated.pdf"
+    assert content["status"] == original_status.value  # Status should be preserved
