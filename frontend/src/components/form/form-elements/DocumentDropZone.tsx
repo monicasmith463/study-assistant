@@ -4,19 +4,25 @@ import React, { useState } from "react"
 import ComponentCard from "../../common/ComponentCard"
 import { useDropzone } from "react-dropzone"
 import SpinnerButton from "@/components/ui/button/SpinnerButton"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { ArrowUpIcon, PencilIcon } from "@/icons"
+import { useDocument, useCreateDocument } from "@/hooks/useDocument"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 const DropzoneComponent: React.FC = () => {
   const [files, setFiles] = useState<File[]>([])
-  const [loading, setLoading] = useState(false)
   const [documentId, setDocumentId] = useState<string | null>(null)
 
-  const queryClient = useQueryClient()
   const router = useRouter()
+
+  // Use the document hook to get processing state
+  const { data: document } = useDocument(documentId)
+  const isProcessing = document?.status === "processing"
+
+  // Use the create document hook
+  const createDocumentMutation = useCreateDocument()
 
   /* -------------------- Dropzone -------------------- */
   const onDrop = (acceptedFiles: File[]) => {
@@ -31,46 +37,17 @@ const DropzoneComponent: React.FC = () => {
   })
 
   /* -------------------- Upload Document -------------------- */
-  const createDocumentMutation = useMutation({
-    mutationFn: async (file: File) => {
-      setLoading(true)
-
-      const formData = new FormData()
-      formData.append("file", file)
-
-      const token = localStorage.getItem("access_token")
-
-      const res = await fetch(`${API_URL}/api/v1/documents/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token || ""}`,
-        },
-        body: formData,
-      })
-
-      if (!res.ok) {
-        throw new Error("Failed to upload document")
-      }
-
-      return res.json()
-    },
-
-    onSuccess: (data) => {
-      setDocumentId(data.id)
-      setFiles([])
-      setLoading(false)
-      queryClient.invalidateQueries({ queryKey: ["documents"] })
-    },
-
-    onError: (err: unknown) => {
-      console.error("Upload failed:", err)
-      setLoading(false)
-    },
-  })
-
   const handleUpload = () => {
     if (files.length === 0) return
-    createDocumentMutation.mutate(files[0])
+    createDocumentMutation.mutate(files[0], {
+      onSuccess: (data) => {
+        setDocumentId(data.id)
+        setFiles([])
+      },
+      onError: (err: unknown) => {
+        console.error("Upload failed:", err)
+      },
+    })
   }
 
   /* -------------------- Generate Exam -------------------- */
@@ -79,8 +56,6 @@ const DropzoneComponent: React.FC = () => {
       if (!documentId) {
         throw new Error("No document ID")
       }
-
-      setLoading(true)
 
       const token = localStorage.getItem("access_token")
 
@@ -104,13 +79,11 @@ const DropzoneComponent: React.FC = () => {
 
     onSuccess: (data) => {
       console.log("data", data)
-      setLoading(false)
       router.push(`/take-exam?exam_id=${data.id}`)
     },
 
     onError: (err: unknown) => {
       console.error("Generate exam failed:", err)
-      setLoading(false)
     },
   })
 
@@ -175,8 +148,12 @@ const DropzoneComponent: React.FC = () => {
             variant="secondary"
             startIcon={<ArrowUpIcon />}
             onClick={handleUpload}
-            disabled={files.length === 0 || loading}
-            loading={loading}
+            disabled={
+              files.length === 0 ||
+              createDocumentMutation.isPending ||
+              isProcessing
+            }
+            loading={createDocumentMutation.isPending || isProcessing}
           >
             Upload Document
           </SpinnerButton>
@@ -187,10 +164,14 @@ const DropzoneComponent: React.FC = () => {
               variant="primary"
               startIcon={<PencilIcon />}
               onClick={() => generateExamMutation.mutate()}
-              disabled={loading}
-              loading={loading}
+              disabled={
+                isProcessing ||
+                generateExamMutation.isPending ||
+                createDocumentMutation.isPending
+              }
+              loading={generateExamMutation.isPending || isProcessing}
             >
-              Generate Exam
+              {isProcessing ? "Processing..." : "Generate Exam"}
             </SpinnerButton>
           )}
         </div>
