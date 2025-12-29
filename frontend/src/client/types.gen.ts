@@ -46,7 +46,7 @@ export type DocumentsPublic = {
     count: number;
 };
 
-export type DocumentStatus = 'uploaded' | 'processing' | 'ready' | 'failed';
+export type DocumentStatus = 'processing' | 'ready' | 'failed';
 
 export type DocumentUpdate = {
     filename?: (string | null);
