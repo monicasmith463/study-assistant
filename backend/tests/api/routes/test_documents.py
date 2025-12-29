@@ -435,7 +435,6 @@ def test_update_document_status_preserved(
     from app.models import DocumentStatus
 
     document = create_random_document(db, status=DocumentStatus.READY)
-    original_status = document.status
 
     data = {"filename": "updated.pdf"}
     response = client.put(
@@ -446,4 +445,4 @@ def test_update_document_status_preserved(
     assert response.status_code == 200
     content = response.json()
     assert content["filename"] == "updated.pdf"
-    assert content["status"] == original_status.value  # Status should be preserved
+    assert content["status"] == "ready"  # Status should be preserved (READY)
