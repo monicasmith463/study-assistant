@@ -8,8 +8,8 @@ from pydantic import BaseModel as PydanticBaseModel
 from pydantic import EmailStr
 from pydantic import Field as PydanticField
 from sqlalchemy import Column, Text
+from sqlalchemy import Enum as SQLAEnum
 from sqlmodel import JSON, Field, ForeignKey, Relationship, SQLModel
-from sqlmodel import Enum as SAEnum
 
 
 # Shared properties
@@ -133,7 +133,9 @@ class DocumentStatus(str, Enum):
 class QuestionBase(SQLModel):
     question: str = Field(sa_column=Column(Text, nullable=False))
 
-    type: QuestionType = Field(sa_column=Column(SAEnum(QuestionType), nullable=False))
+    type: QuestionType = Field(
+        sa_column=Column(SQLAEnum(QuestionType, native_enum=False), nullable=False)
+    )
 
     options: list[str] = Field(sa_column=Column(JSON, nullable=False))
 
@@ -315,7 +317,7 @@ class Document(DocumentBase, table=True):
     status: DocumentStatus = Field(
         default=DocumentStatus.PROCESSING,
         sa_column=Column(
-            SAEnum(DocumentStatus, name="document_status"),
+            SQLAEnum(DocumentStatus, name="document_status", native_enum=False),
             nullable=False,
         ),
     )
