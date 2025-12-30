@@ -29,6 +29,8 @@ export type Body_login_login_access_token = {
     client_secret?: (string | null);
 };
 
+export type Difficulty = 'easy' | 'medium' | 'hard';
+
 export type DocumentPublic = {
     filename: string;
     s3_url?: (string | null);
@@ -104,7 +106,10 @@ export type ExplanationOutput = {
     suggested_review: string;
 };
 
-export type GenerateQuestionsRequest = {
+export type GenerateQuestionsPublic = {
+    num_questions?: number;
+    difficulty?: (Difficulty | null);
+    question_types?: Array<QuestionType>;
     document_ids: Array<string>;
 };
 
@@ -239,7 +244,7 @@ export type ExamAttemptsReadExamAttemptData = {
 export type ExamAttemptsReadExamAttemptResponse = (ExamAttemptPublic);
 
 export type ExamsGenerateExamData = {
-    requestBody: GenerateQuestionsRequest;
+    requestBody: GenerateQuestionsPublic;
 };
 
 export type ExamsGenerateExamResponse = (ExamPublic);
