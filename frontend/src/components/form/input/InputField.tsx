@@ -6,6 +6,7 @@ interface InputProps {
   name?: string
   placeholder?: string
   defaultValue?: string | number
+  value?: string | number
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void // new
   className?: string
@@ -26,6 +27,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       name,
       placeholder,
       defaultValue,
+      value,
       onChange,
       onBlur, // new
       className = "",
@@ -61,6 +63,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           name={name}
           placeholder={placeholder}
           defaultValue={defaultValue}
+          value={value}
           onChange={onChange}
           onBlur={onBlur}
           min={min}
