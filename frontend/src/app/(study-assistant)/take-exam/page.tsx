@@ -5,8 +5,8 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: "Next.js TakeExam Page",
-  description: "This is Next.js TakeExam Page",
+  title: "Take Exam",
+  description: "Take your practice exam",
 }
 
 export default function TakeExam() {
