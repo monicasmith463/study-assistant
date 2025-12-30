@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 
 from app.core.ai.openai import (
+    MAX_CHARS,
     fetch_document_texts,
     generate_answer_explanation,
     generate_explanation_prompt,
@@ -272,6 +273,85 @@ async def test_generate_questions_from_documents_general_error() -> None:
 
         assert exc_info.value.status_code == 500
         assert "Failed to generate questions" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_generate_questions_from_documents_truncates_long_text() -> None:
+    """Test that extracted text is truncated to MAX_CHARS when generating questions."""
+    document_ids = [uuid.uuid4()]
+    # Create text longer than MAX_CHARS
+    long_text = "a" * (MAX_CHARS + 1000)
+
+    mock_session = MagicMock()
+    mock_llm = AsyncMock()
+    mock_llm_output = MagicMock()
+    mock_llm_output.questions = [MagicMock()]
+
+    mock_question = QuestionCreate(
+        question="Test question?",
+        correct_answer="Answer",
+        type=QuestionType.multiple_choice,
+        options=["A", "B", "C"],
+    )
+
+    with patch(
+        "app.core.ai.openai.fetch_document_texts", return_value=[long_text]
+    ), patch("app.core.ai.openai.structured_question_llm", mock_llm), patch(
+        "app.core.ai.openai.parse_llm_output", return_value=[mock_question]
+    ), patch("app.core.ai.openai.generate_questions_prompt") as mock_prompt, patch(
+        "app.core.ai.openai.logger"
+    ) as mock_logger:
+        mock_llm.ainvoke.return_value = mock_llm_output
+        # Make generate_questions_prompt return the text passed to it
+        mock_prompt.side_effect = lambda text, **kwargs: text
+
+        result = await generate_questions_from_documents(mock_session, document_ids)
+
+        # Verify truncation occurred - the text passed to generate_questions_prompt should be <= MAX_CHARS
+        call_args = mock_prompt.call_args[0][0]
+        assert len(call_args) == MAX_CHARS
+        # Verify warning was logged
+        assert mock_logger.warning.called
+        assert "Truncated" in str(mock_logger.warning.call_args)
+
+    assert len(result) == 1
+    assert result[0] == mock_question
+
+
+@pytest.mark.asyncio
+async def test_generate_questions_from_documents_no_truncation_when_short() -> None:
+    """Test that text is not truncated when it's shorter than MAX_CHARS."""
+    document_ids = [uuid.uuid4()]
+    short_text = "Short document text"
+
+    mock_session = MagicMock()
+    mock_llm = AsyncMock()
+    mock_llm_output = MagicMock()
+    mock_llm_output.questions = [MagicMock()]
+
+    mock_question = QuestionCreate(
+        question="Test question?",
+        correct_answer="Answer",
+        type=QuestionType.multiple_choice,
+        options=["A", "B", "C"],
+    )
+
+    with patch(
+        "app.core.ai.openai.fetch_document_texts", return_value=[short_text]
+    ), patch("app.core.ai.openai.structured_question_llm", mock_llm), patch(
+        "app.core.ai.openai.parse_llm_output", return_value=[mock_question]
+    ), patch("app.core.ai.openai.logger") as mock_logger:
+        mock_llm.ainvoke.return_value = mock_llm_output
+
+        result = await generate_questions_from_documents(mock_session, document_ids)
+
+        # Verify no truncation warning was logged
+        assert not any(
+            "Truncated" in str(call) for call in mock_logger.warning.call_args_list
+        )
+
+    assert len(result) == 1
+    assert result[0] == mock_question
 
 
 def test_generate_explanation_prompt() -> None:
