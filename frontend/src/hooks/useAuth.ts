@@ -18,6 +18,7 @@ const useIsLoggedIn = () => {
   const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
+    // Check after mount to avoid SSR issues
     const token = localStorage.getItem("access_token")
     setLoggedIn(token !== null)
   }, [])

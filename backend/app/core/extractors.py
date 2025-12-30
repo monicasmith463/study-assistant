@@ -60,8 +60,12 @@ def embed_chunks(chunks: list[str]) -> list[list[float]]:
 def extract_text_and_save_to_db(s3_key: str, document_id: str) -> None:
     with Session(engine) as session:
         document = session.get(Document, document_id)
+
         if not document:
             raise Exception("Document not found")
+
+        elif document.status != DocumentStatus.processing:
+            return
 
         try:
             # Extract text and process (document already has PROCESSING status by default)
@@ -78,6 +82,7 @@ def extract_text_and_save_to_db(s3_key: str, document_id: str) -> None:
             session.commit()
 
         except Exception as e:
+            session.rollback()
             document.status = DocumentStatus.failed
             document.processing_error = str(e)
             session.add(document)

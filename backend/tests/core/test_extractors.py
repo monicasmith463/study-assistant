@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from app.core.extractors import extract_text_and_save_to_db, perform_fixed_size_chunking
+from app.models import DocumentStatus
 
 
 def test_extract_text_and_save_chunks_to_db() -> None:
@@ -10,6 +11,7 @@ def test_extract_text_and_save_chunks_to_db() -> None:
 
     mock_document = MagicMock()
     mock_document.id = fake_doc_id
+    mock_document.status = DocumentStatus.processing  # Must be processing to proceed
 
     with patch(
         "app.core.extractors.extract_text_from_s3_file", return_value=fake_text
@@ -18,13 +20,24 @@ def test_extract_text_and_save_chunks_to_db() -> None:
     ) as save_chunks_mock:
         session_instance = MagicMock()
         session_class_mock.return_value.__enter__.return_value = session_instance
-        session_instance.exec.return_value.first.return_value = mock_document
+        # Mock session.get() instead of session.exec()
+        session_instance.get.return_value = mock_document
 
         # Run function
         extract_text_and_save_to_db(fake_s3_key, fake_doc_id)
+
+        # Verify document was retrieved
+        session_instance.get.assert_called_once()
 
         # Check chunking worked
         expected_chunks = perform_fixed_size_chunking(fake_text)
         save_chunks_mock.assert_called_once_with(
             session_instance, fake_doc_id, expected_chunks
         )
+
+        # Verify document was updated
+        assert mock_document.extracted_text == fake_text
+        assert mock_document.chunk_count == len(expected_chunks)
+        assert mock_document.status == DocumentStatus.ready
+        session_instance.add.assert_called()
+        session_instance.commit.assert_called()

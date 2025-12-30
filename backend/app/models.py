@@ -317,7 +317,7 @@ class Document(DocumentBase, table=True):
     status: DocumentStatus = Field(
         default=DocumentStatus.processing,
         sa_column=Column(
-            SQLAEnum(DocumentStatus, name="document_status", native_enum=False),
+            SQLAEnum(DocumentStatus, name="document_status", native_enum=True),
             nullable=False,
         ),
     )
