@@ -59,7 +59,7 @@ def test_create_exam_with_questions(db: Session) -> None:
         QuestionCreate(
             question="Q1",
             correct_answer="True",
-            type=QuestionType.TRUE_FALSE,
+            type=QuestionType.true_false,
             options=["True", "False"],
         )
     ]

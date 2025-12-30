@@ -101,7 +101,7 @@ def test_validate_and_convert_question_item_success() -> None:
     assert isinstance(result, QuestionCreate)
     assert result.question == "What is 2+2?"
     assert result.correct_answer == "4"
-    assert result.type == QuestionType.MULTIPLE_CHOICE
+    assert result.type == QuestionType.multiple_choice
     assert result.options == ["2", "3", "4", "5"]
 
 
@@ -115,7 +115,7 @@ def test_validate_and_convert_question_item_true_false() -> None:
 
     result = validate_and_convert_question_item(mock_question)
 
-    assert result.type == QuestionType.TRUE_FALSE
+    assert result.type == QuestionType.true_false
     assert result.options == ["True", "False"]
 
 
@@ -143,13 +143,13 @@ def test_parse_llm_output_success() -> None:
             QuestionCreate(
                 question="Question 1",
                 correct_answer="Answer 1",
-                type=QuestionType.MULTIPLE_CHOICE,
+                type=QuestionType.multiple_choice,
                 options=["A", "B", "C"],
             ),
             QuestionCreate(
                 question="Question 2",
                 correct_answer="True",
-                type=QuestionType.TRUE_FALSE,
+                type=QuestionType.true_false,
                 options=["True", "False"],
             ),
         ]
@@ -184,7 +184,7 @@ async def test_generate_questions_from_documents_success() -> None:
     mock_question = QuestionCreate(
         question="Test question?",
         correct_answer="Answer",
-        type=QuestionType.MULTIPLE_CHOICE,
+        type=QuestionType.multiple_choice,
         options=["A", "B", "C"],
     )
 

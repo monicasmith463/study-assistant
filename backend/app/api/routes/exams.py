@@ -13,7 +13,7 @@ from app.models import (
     ExamPublic,
     ExamsPublic,
     ExamUpdate,
-    GenerateQuestionsRequest,
+    GenerateQuestionsPublic,
     Message,
     QuestionCreate,
 )
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/exams", tags=["exams"])
 async def generate_exam(
     *,
     session: SessionDep,
-    payload: GenerateQuestionsRequest,
+    payload: GenerateQuestionsPublic,
     current_user: CurrentUser,
 ) -> ExamPublic:
     source_document_ids = [str(doc_id) for doc_id in payload.document_ids]
@@ -47,7 +47,11 @@ async def generate_exam(
 
     # 2. Generate questions
     generated_questions: list[QuestionCreate] = await generate_questions_from_documents(
-        session, payload.document_ids
+        session,
+        payload.document_ids,
+        num_questions=payload.num_questions if payload.num_questions else 5,
+        difficulty=payload.difficulty if payload.difficulty else None,
+        question_types=payload.question_types if payload.question_types else None,
     )
 
     return crud.create_exam(

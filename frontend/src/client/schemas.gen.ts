@@ -157,6 +157,12 @@ export const Body_login_login_access_tokenSchema = {
     title: 'Body_login-login_access_token'
 } as const;
 
+export const DifficultySchema = {
+    type: 'string',
+    enum: ['easy', 'medium', 'hard'],
+    title: 'Difficulty'
+} as const;
+
 export const DocumentPublicSchema = {
     properties: {
         filename: {
@@ -604,8 +610,32 @@ export const ExplanationOutputSchema = {
     title: 'ExplanationOutput'
 } as const;
 
-export const GenerateQuestionsRequestSchema = {
+export const GenerateQuestionsPublicSchema = {
     properties: {
+        num_questions: {
+            type: 'integer',
+            maximum: 50,
+            minimum: 1,
+            title: 'Num Questions',
+            default: 5
+        },
+        difficulty: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/Difficulty'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        question_types: {
+            items: {
+                '$ref': '#/components/schemas/QuestionType'
+            },
+            type: 'array',
+            title: 'Question Types'
+        },
         document_ids: {
             items: {
                 type: 'string',
@@ -617,7 +647,7 @@ export const GenerateQuestionsRequestSchema = {
     },
     type: 'object',
     required: ['document_ids'],
-    title: 'GenerateQuestionsRequest'
+    title: 'GenerateQuestionsPublic'
 } as const;
 
 export const HTTPValidationErrorSchema = {

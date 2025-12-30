@@ -12,6 +12,7 @@ from app.core.ai.embeddings import embed_text
 from app.core.ai.retrieval import retrieve_top_k_chunks
 from app.core.config import settings
 from app.models import (
+    Difficulty,
     Document,
     ExplanationOutput,
     QuestionCreate,
@@ -32,7 +33,16 @@ llm = ChatOpenAI(
 structured_question_llm = llm.with_structured_output(QuestionOutput)
 
 
-def generate_questions_prompt(text: str, num_questions: int = 5) -> str:
+def generate_questions_prompt(
+    text: str,
+    num_questions: int = 5,
+    difficulty: Difficulty | None = None,
+    question_types: list[QuestionType] | None = None,
+) -> str:
+    difficulty_str = difficulty.value if difficulty else "medium"
+    question_types_str = (
+        ", ".join(question_types) if question_types else "multiple_choice, true_false"
+    )
     return f"""
 Generate {num_questions} questions from the following document text.
 
@@ -42,16 +52,44 @@ Rules (must follow exactly):
   - answer (string or null)
   - type: "multiple_choice" or "true_false"
   - options (array of strings)
+
 - For true_false questions:
   - options MUST be exactly ["True", "False"]
+
 - For multiple_choice questions:
   - options MUST contain at least 3 plausible choices
   - answer MUST match exactly one option
+
+Difficulty rules:
+- EASY:
+  - Focus on direct facts explicitly stated in the text
+  - Minimal inference
+  - Single concept per question
+  - Obvious distractors
+
+- MEDIUM:
+  - Require understanding relationships between concepts
+  - Light inference or comparison
+  - Distractors should be plausible but incorrect
+
+- HARD:
+  - Require multi-step reasoning or synthesis across multiple parts of the text
+  - Subtle distinctions between options
+  - Distractors should be conceptually close to the correct answer
+
+Additional constraints:
+- Do NOT introduce facts not present in the document
+- Do NOT rely on outside knowledge
+- Difficulty MUST affect question complexity, not wording alone
 
 Return structured data only.
 
 Document text:
 {text}
+
+Difficulty: {difficulty_str}
+Allowed question types: {question_types_str}
+
 """
 
 
@@ -94,8 +132,26 @@ def parse_llm_output(llm_output: Any) -> list[QuestionCreate]:
     return questions
 
 
+def normalize_question_types(
+    question_types: list[QuestionType] | None,
+) -> list[QuestionType]:
+    if question_types is None:
+        return [QuestionType.multiple_choice, QuestionType.true_false]
+    return question_types
+
+
+def normalize_difficulty(difficulty: Difficulty | None) -> Difficulty:
+    if difficulty is None:
+        return Difficulty.medium
+    return difficulty
+
+
 async def generate_questions_from_documents(
-    session: Session, document_ids: list[UUID], num_questions: int = 5
+    session: Session,
+    document_ids: list[UUID],
+    num_questions: int = 5,
+    difficulty: Difficulty | None = None,
+    question_types: list[QuestionType] | None = None,
 ) -> list[QuestionCreate]:
     """Main function: fetch documents, generate questions via LLM, and return QuestionCreate objects."""
     document_texts = fetch_document_texts(session, document_ids)
@@ -103,7 +159,10 @@ async def generate_questions_from_documents(
         return []
 
     prompt = generate_questions_prompt(
-        "\n".join(document_texts), num_questions=num_questions
+        "\n".join(document_texts),
+        num_questions=num_questions,
+        difficulty=normalize_difficulty(difficulty),
+        question_types=normalize_question_types(question_types),
     )
 
     try:
@@ -137,7 +196,17 @@ def generate_explanation_prompt(
     context = "\n\n".join(context_chunks)
 
     return f"""
-You are a tutor explaining why a student answer is incorrect.
+You are a friendly, concise tutor helping a student learn from a mistake.
+
+Rules (must follow):
+- Use ONLY the study material below
+- Do NOT restate the material verbatim
+- Do NOT say \"the material says\" or similar phrases
+- Be brief (1–4 sentences total)
+- Be encouraging and slightly playful, not academic
+
+Task:
+Explain why the student's answer is incorrect and what they should remember next time.
 
 Question:
 {question}
@@ -148,8 +217,9 @@ Correct answer:
 Student answer:
 {user_answer}
 
-Relevant study material:
+Study material:
 {context}
+
 
 Explain clearly using ONLY the material above.
 Avoid introducing new facts.

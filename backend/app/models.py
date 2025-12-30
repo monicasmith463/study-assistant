@@ -120,8 +120,8 @@ class ExamUpdate(SQLModel):
 
 
 class QuestionType(str, Enum):
-    MULTIPLE_CHOICE = "multiple_choice"
-    TRUE_FALSE = "true_false"
+    multiple_choice = "multiple_choice"
+    true_false = "true_false"
 
 
 class DocumentStatus(str, Enum):
@@ -134,7 +134,7 @@ class QuestionBase(SQLModel):
     question: str = Field(sa_column=Column(Text, nullable=False))
 
     type: QuestionType = Field(
-        sa_column=Column(SQLAEnum(QuestionType, native_enum=False), nullable=False)
+        sa_column=Column(SQLAEnum(QuestionType, native_enum=True), nullable=False)
     )
 
     options: list[str] = Field(sa_column=Column(JSON, nullable=False))
@@ -167,9 +167,20 @@ class QuestionCreate(QuestionBase):
     options: list[str]
 
 
-class GenerateQuestionsRequest(SQLModel):
+class Difficulty(str, Enum):
+    easy = "easy"
+    medium = "medium"
+    hard = "hard"
+
+
+class GenerateQuestionsBase(SQLModel):
+    num_questions: int = Field(default=5, ge=1, le=50)
+    difficulty: Difficulty | None = None
+    question_types: list[QuestionType] = Field(default_factory=list)
+
+
+class GenerateQuestionsPublic(GenerateQuestionsBase):
     document_ids: list[uuid.UUID]
-    # maybe add difficulty, number of questions, etc.
 
 
 class ExamAttemptBase(SQLModel):

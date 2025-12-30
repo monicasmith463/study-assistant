@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from app.core.config import settings
-from app.models import QuestionCreate, QuestionType
+from app.models import Difficulty, QuestionCreate, QuestionType
 from tests.utils.document import create_random_documents
 from tests.utils.exam import create_random_exam
 
@@ -24,7 +24,7 @@ def test_generate_exam(
         QuestionCreate(
             question=f"Generated question {i}",
             correct_answer="some answer",
-            type=QuestionType.MULTIPLE_CHOICE,
+            type=QuestionType.multiple_choice,
             options=["option1", "option2", "option3"],
         )
         for i in range(1, 5)
@@ -35,12 +35,19 @@ def test_generate_exam(
     with patch(
         "app.api.routes.exams.generate_questions_from_documents",
         return_value=mock_questions,
-    ):
+    ) as mock_generate:
         response = client.post(
             f"{settings.API_V1_STR}/exams/generate",
             headers=superuser_token_headers,
             json=payload,
         )
+
+        # Verify default values are used
+        mock_generate.assert_called_once()
+        call_args = mock_generate.call_args
+        assert call_args[1]["num_questions"] == 5  # default
+        assert call_args[1]["difficulty"] is None  # default
+        assert call_args[1]["question_types"] is None  # default
 
     # Response should now contain ExamPublic object with id and owner_id
     assert response.status_code == 200, "Unexpected response status code"
@@ -54,6 +61,100 @@ def test_generate_exam(
     assert len(content["questions"]) == len(
         mock_questions
     ), "Number of questions in exam should match generated questions"
+
+
+def test_generate_exam_with_customization(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test generating exam with custom num_questions, difficulty, and question_types."""
+    documents = create_random_documents(db)
+    document_ids = [str(doc.id) for doc in documents]
+
+    mock_questions = [
+        QuestionCreate(
+            question=f"Generated question {i}",
+            correct_answer="some answer",
+            type=QuestionType.multiple_choice,
+            options=["option1", "option2", "option3"],
+        )
+        for i in range(1, 8)  # 7 questions
+    ]
+
+    payload = {
+        "document_ids": document_ids,
+        "num_questions": 7,
+        "difficulty": "hard",
+        "question_types": ["multiple_choice"],
+    }
+
+    with patch(
+        "app.api.routes.exams.generate_questions_from_documents",
+        return_value=mock_questions,
+    ) as mock_generate:
+        response = client.post(
+            f"{settings.API_V1_STR}/exams/generate",
+            headers=superuser_token_headers,
+            json=payload,
+        )
+
+    assert response.status_code == 200
+    content = response.json()
+
+    # Verify customization parameters were passed
+    mock_generate.assert_called_once()
+    call_args = mock_generate.call_args
+    assert call_args[1]["num_questions"] == 7
+    assert call_args[1]["difficulty"] == Difficulty.hard
+    assert call_args[1]["question_types"] == [QuestionType.multiple_choice]
+
+    # Verify exam was created with correct number of questions
+    assert len(content["questions"]) == 7
+
+
+def test_generate_exam_with_partial_customization(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test generating exam with only some customization options."""
+    documents = create_random_documents(db)
+    document_ids = [str(doc.id) for doc in documents]
+
+    mock_questions = [
+        QuestionCreate(
+            question=f"Generated question {i}",
+            correct_answer="some answer",
+            type=QuestionType.true_false,
+            options=["True", "False"],
+        )
+        for i in range(1, 4)  # 3 questions
+    ]
+
+    payload = {
+        "document_ids": document_ids,
+        "num_questions": 3,
+        "question_types": ["true_false"],
+    }
+
+    with patch(
+        "app.api.routes.exams.generate_questions_from_documents",
+        return_value=mock_questions,
+    ) as mock_generate:
+        response = client.post(
+            f"{settings.API_V1_STR}/exams/generate",
+            headers=superuser_token_headers,
+            json=payload,
+        )
+
+    assert response.status_code == 200
+    content = response.json()
+
+    # Verify partial customization
+    mock_generate.assert_called_once()
+    call_args = mock_generate.call_args
+    assert call_args[1]["num_questions"] == 3
+    assert call_args[1]["difficulty"] is None  # not specified
+    assert call_args[1]["question_types"] == [QuestionType.true_false]
+
+    assert len(content["questions"]) == 3
 
 
 def skip_test_generate_exam_real(
