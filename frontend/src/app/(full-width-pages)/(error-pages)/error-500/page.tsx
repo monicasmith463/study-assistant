@@ -5,8 +5,8 @@ import Link from "next/link"
 import React from "react"
 
 export const metadata: Metadata = {
-  title: "Next.js Error 500 Page",
-  description: "This is Next.js Error 500 page",
+  title: "Server Error",
+  description: "An internal server error occurred",
 }
 
 export default function Error500() {
