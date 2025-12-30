@@ -76,7 +76,7 @@ export default function LandingPage() {
             <div className="relative">
               <div className="shadow-theme-xl overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-800">
                 <Image
-                  src="/dashboard-preview.png"
+                  src="/images/landing/examresults.png"
                   alt="Study Assistant dashboard preview"
                   width={900}
                   height={600}
