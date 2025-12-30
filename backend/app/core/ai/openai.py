@@ -23,6 +23,9 @@ from app.models import (
 # Initialize logging
 logger = logging.getLogger(__name__)
 
+# Maximum characters for extracted text when generating exam questions
+MAX_CHARS = 15_000
+
 llm = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0.5,
@@ -158,8 +161,17 @@ async def generate_questions_from_documents(
     if not document_texts:
         return []
 
+    # Join texts and truncate to MAX_CHARS
+    combined_text = "\n".join(document_texts)
+    original_length = len(combined_text)
+    if original_length > MAX_CHARS:
+        combined_text = combined_text[:MAX_CHARS]
+        logger.warning(
+            f"Truncated extracted text from {original_length} to {MAX_CHARS} characters"
+        )
+
     prompt = generate_questions_prompt(
-        "\n".join(document_texts),
+        combined_text,
         num_questions=num_questions,
         difficulty=normalize_difficulty(difficulty),
         question_types=normalize_question_types(question_types),
