@@ -73,16 +73,36 @@ export default function LandingPage() {
             </div>
 
             {/* Right: Preview Image */}
-            <div className="relative">
-              <div className="shadow-theme-xl overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-800">
-                <Image
-                  src="/images/landing/examresults.png"
-                  alt="Study Assistant dashboard preview"
-                  width={900}
-                  height={600}
-                  className="h-auto w-full"
-                  priority
+            <div className="group relative">
+              {/* File icons that pop out from the top - behind screenshot */}
+              <div className="absolute -top-14 z-0 flex w-full justify-center transition-all duration-700 ease-in-out group-hover:-top-28 sm:-top-16 sm:group-hover:-top-[4.2rem] lg:-top-20">
+                <img
+                  src="/pdf.svg"
+                  alt="PDF"
+                  className="animate-float-slow w-20 translate-x-12 translate-y-6 -rotate-[12deg] transition-all duration-700 ease-in-out group-hover:translate-x-2 group-hover:translate-y-0 sm:w-24 sm:translate-x-16 sm:translate-y-8 md:w-28 lg:w-36 xl:w-44"
                 />
+                <img
+                  src="/powerpoint.svg"
+                  alt="PowerPoint"
+                  className="animate-float-slow-delay w-20 translate-y-4 rotate-0 transition-all duration-700 ease-in-out group-hover:translate-y-0 sm:w-24 sm:translate-y-6 md:w-28 lg:w-36 xl:w-44"
+                />
+                <img
+                  src="/word.svg"
+                  alt="Word"
+                  className="animate-float-slow-delay-2 w-20 -translate-x-12 translate-y-6 rotate-[12deg] transition-all duration-700 ease-in-out group-hover:-translate-x-2 group-hover:translate-y-0 sm:w-24 sm:-translate-x-16 sm:translate-y-8 md:w-28 lg:w-36 xl:w-44"
+                />
+              </div>
+              <div className="relative z-10 overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
+                <div className="shadow-theme-xl overflow-hidden rounded-2xl bg-white dark:bg-gray-800">
+                  <Image
+                    src="/images/landing/examresults.png"
+                    alt="Study Assistant dashboard preview"
+                    width={1200}
+                    height={800}
+                    className="h-auto w-full scale-110"
+                    priority
+                  />
+                </div>
               </div>
             </div>
           </div>
