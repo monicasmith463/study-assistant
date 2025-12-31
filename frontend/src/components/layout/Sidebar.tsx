@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSidebar } from "@/context/SidebarContext"
 import { useIsLoggedIn } from "@/hooks/useAuth"
+import Logo from "@/components/common/Logo"
 import {
   FileIcon,
   ChevronDownIcon,
@@ -22,7 +23,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   {
     title: "My Exams",
-    icon: <FileIcon className="h-5 w-5" />,
+    icon: <FileIcon className="h-6 w-6 flex-shrink-0" />,
     path: "/exams",
   },
 ]
@@ -85,20 +86,7 @@ const Sidebar: React.FC = () => {
           >
             {showExpandedContent ? (
               <>
-                <Link
-                  href="/"
-                  className="flex flex-shrink-0 items-center gap-2"
-                >
-                  <span
-                    className="text-xl leading-none select-none"
-                    aria-hidden
-                  >
-                    📚
-                  </span>
-                  <span className="text-base font-semibold tracking-tight whitespace-nowrap text-gray-900 dark:text-gray-100">
-                    Study Assistant
-                  </span>
-                </Link>
+                <Logo showText={true} />
                 <button
                   onClick={toggleSidebar}
                   className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
@@ -130,7 +118,7 @@ const Sidebar: React.FC = () => {
                         className={`group flex w-full items-center ${
                           showExpandedContent
                             ? "justify-between px-3"
-                            : "justify-center px-2"
+                            : "justify-center px-2.5"
                         } rounded-lg py-2.5 text-sm font-medium transition-colors ${
                           openSubmenu === item.title
                             ? "bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400"
@@ -138,9 +126,9 @@ const Sidebar: React.FC = () => {
                         }`}
                         title={!showExpandedContent ? item.title : undefined}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 overflow-visible">
                           <span
-                            className={`${
+                            className={`flex-shrink-0 overflow-visible ${
                               openSubmenu === item.title
                                 ? "text-brand-600 dark:text-brand-400"
                                 : "text-gray-500 dark:text-gray-400"
@@ -190,8 +178,8 @@ const Sidebar: React.FC = () => {
                       className={`group flex items-center ${
                         showExpandedContent
                           ? "gap-3 px-3"
-                          : "justify-center px-2"
-                      } rounded-lg py-2.5 text-sm font-medium transition-colors ${
+                          : "justify-center px-2.5"
+                      } overflow-visible rounded-lg py-2.5 text-sm font-medium transition-colors ${
                         isActive(item.path)
                           ? "bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400"
                           : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -199,7 +187,7 @@ const Sidebar: React.FC = () => {
                       title={!showExpandedContent ? item.title : undefined}
                     >
                       <span
-                        className={`${
+                        className={`flex-shrink-0 overflow-visible ${
                           isActive(item.path)
                             ? "text-brand-600 dark:text-brand-400"
                             : "text-gray-500 dark:text-gray-400"
@@ -228,18 +216,7 @@ const Sidebar: React.FC = () => {
         <div className="flex h-full flex-col border-r border-gray-200 dark:border-gray-800">
           {/* Sidebar Header */}
           <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-800">
-            <Link
-              href="/"
-              className="flex flex-shrink-0 items-center gap-2"
-              onClick={() => toggleMobileSidebar()}
-            >
-              <span className="text-xl leading-none select-none" aria-hidden>
-                📚
-              </span>
-              <span className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-                Study Assistant
-              </span>
-            </Link>
+            <Logo showText={true} onClick={() => toggleMobileSidebar()} />
           </div>
 
           {/* Menu Items */}
@@ -254,7 +231,7 @@ const Sidebar: React.FC = () => {
                         className="group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-gray-500 dark:text-gray-400">
+                          <span className="flex-shrink-0 text-gray-500 dark:text-gray-400">
                             {item.icon}
                           </span>
                           <span>{item.title}</span>
@@ -298,7 +275,7 @@ const Sidebar: React.FC = () => {
                       }`}
                     >
                       <span
-                        className={`${
+                        className={`flex-shrink-0 ${
                           isActive(item.path)
                             ? "text-brand-600 dark:text-brand-400"
                             : "text-gray-500 dark:text-gray-400"

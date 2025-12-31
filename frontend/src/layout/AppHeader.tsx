@@ -1,6 +1,7 @@
 "use client"
 
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton"
+import Logo from "@/components/common/Logo"
 import UserDropdown from "@/components/header/UserDropdown"
 import Button from "@/components/ui/button/Button"
 import { useIsLoggedIn } from "@/hooks/useAuth"
@@ -60,16 +61,7 @@ const AppHeader: React.FC = () => {
               />
             </svg>
           </button>
-          {!isActiveLoggedIn && (
-            <Link href="/" className="flex flex-shrink-0 items-center gap-2">
-              <span className="text-xl leading-none select-none" aria-hidden>
-                📚
-              </span>
-              <span className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-                Study Assistant
-              </span>
-            </Link>
-          )}
+          {!isActiveLoggedIn && <Logo />}
         </div>
 
         {/* Right side */}
