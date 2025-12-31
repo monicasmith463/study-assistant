@@ -161,6 +161,119 @@ def test_create_document_success(
     assert content["status"] == "processing"  # New documents start as processing
 
 
+def test_create_document_docx_success(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    """Test creating a document with a DOCX file upload."""
+    file_content = b"DOCX file content"
+    mock_key = "documents/user-id/test-uuid.docx"
+
+    with patch(
+        "app.api.routes.documents.upload_file_to_s3", return_value=mock_key
+    ), patch(
+        "app.api.routes.documents.generate_s3_url",
+        return_value=f"https://bucket.s3.amazonaws.com/{mock_key}",
+    ), patch("app.api.routes.documents.extract_text_and_save_to_db"):
+        response = client.post(
+            f"{settings.API_V1_STR}/documents/",
+            headers=superuser_token_headers,
+            files={
+                "file": (
+                    "example.docx",
+                    io.BytesIO(file_content),
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                )
+            },
+        )
+
+    assert response.status_code == 200
+    content = response.json()
+    assert content["filename"] == "example.docx"
+    assert (
+        content["content_type"]
+        == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    assert content["status"] == "processing"
+
+
+def test_create_document_pptx_success(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    """Test creating a document with a PPTX file upload."""
+    file_content = b"PPTX file content"
+    mock_key = "documents/user-id/test-uuid.pptx"
+
+    with patch(
+        "app.api.routes.documents.upload_file_to_s3", return_value=mock_key
+    ), patch(
+        "app.api.routes.documents.generate_s3_url",
+        return_value=f"https://bucket.s3.amazonaws.com/{mock_key}",
+    ), patch("app.api.routes.documents.extract_text_and_save_to_db"):
+        response = client.post(
+            f"{settings.API_V1_STR}/documents/",
+            headers=superuser_token_headers,
+            files={
+                "file": (
+                    "example.pptx",
+                    io.BytesIO(file_content),
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                )
+            },
+        )
+
+    assert response.status_code == 200
+    content = response.json()
+    assert content["filename"] == "example.pptx"
+    assert (
+        content["content_type"]
+        == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    )
+    assert content["status"] == "processing"
+
+
+def test_create_document_txt_success(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    """Test creating a document with a TXT file upload."""
+    file_content = b"Plain text file content"
+    mock_key = "documents/user-id/test-uuid.txt"
+
+    with patch(
+        "app.api.routes.documents.upload_file_to_s3", return_value=mock_key
+    ), patch(
+        "app.api.routes.documents.generate_s3_url",
+        return_value=f"https://bucket.s3.amazonaws.com/{mock_key}",
+    ), patch("app.api.routes.documents.extract_text_and_save_to_db"):
+        response = client.post(
+            f"{settings.API_V1_STR}/documents/",
+            headers=superuser_token_headers,
+            files={"file": ("example.txt", io.BytesIO(file_content), "text/plain")},
+        )
+
+    assert response.status_code == 200
+    content = response.json()
+    assert content["filename"] == "example.txt"
+    assert content["content_type"] == "text/plain"
+    assert content["status"] == "processing"
+
+
+def test_create_document_invalid_mime_type(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    """Test creating a document with an invalid MIME type."""
+    file_content = b"Invalid file content"
+
+    response = client.post(
+        f"{settings.API_V1_STR}/documents/",
+        headers=superuser_token_headers,
+        files={"file": ("example.jpg", io.BytesIO(file_content), "image/jpeg")},
+    )
+
+    assert response.status_code == 400
+    content = response.json()
+    assert "Unsupported file type" in content["detail"]
+
+
 def test_create_document_s3_upload_failure(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:

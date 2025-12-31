@@ -71,6 +71,7 @@ def read_exam(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
         raise HTTPException(status_code=404, detail="Exam not found")
     if not current_user.is_superuser and (exam.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    session.refresh(exam, attribute_names=["questions"])
     return exam
 
 

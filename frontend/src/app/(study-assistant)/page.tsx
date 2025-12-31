@@ -38,7 +38,7 @@ export default function LandingPage() {
                       variant="primary"
                       className="w-full sm:w-auto"
                     >
-                      Try with a PDF
+                      Upload Document
                       <ArrowRightIcon className="h-5 w-5" />
                     </Button>
                   </Link>
@@ -66,10 +66,6 @@ export default function LandingPage() {
                   </Link>
                 )}
               </div>
-
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Works with PDFs
-              </p>
             </div>
 
             {/* Right: Preview Image */}
