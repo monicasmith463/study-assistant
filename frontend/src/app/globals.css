@@ -738,3 +738,28 @@ span.flatpickr-weekday,
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
 }
+
+/* Gentle float animation for landing page file icons */
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-float-slow-delay {
+  animation: float-slow 8s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+.animate-float-slow-delay-2 {
+  animation: float-slow 8s ease-in-out infinite;
+  animation-delay: 3s;
+}
