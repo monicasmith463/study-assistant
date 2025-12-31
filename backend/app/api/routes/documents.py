@@ -22,6 +22,16 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Allowed MIME types for document uploads
+ALLOWED_MIME_TYPES = {
+    "application/pdf",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+}
+
 
 @router.post("/", response_model=DocumentPublic)
 def create_document(
@@ -31,6 +41,12 @@ def create_document(
     background_tasks: BackgroundTasks,  # noqa: ARG001
     file: UploadFile = File(...),
 ) -> Any:
+    # Validate MIME type
+    if not file.content_type or file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type: {file.content_type or 'unknown'}. Allowed types: PDF, DOC, DOCX, PPT, PPTX, TXT",
+        )
     key = None
 
     try:

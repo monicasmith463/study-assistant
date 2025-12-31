@@ -35,6 +35,12 @@ const DropzoneComponent: React.FC = () => {
     const rejection = fileRejections[0]
     if (rejection.errors.some((error) => error.code === "file-too-large")) {
       setFileError(`File "${rejection.file.name}" exceeds the 5MB size limit.`)
+    } else if (
+      rejection.errors.some((error) => error.code === "file-invalid-type")
+    ) {
+      setFileError(
+        `File "${rejection.file.name}" is not a supported file type. Please upload PDF, DOC, DOCX, PPT, PPTX, or TXT files.`
+      )
     } else {
       setFileError(
         `Failed to add file: ${rejection.errors[0]?.message || "Unknown error"}`
@@ -46,7 +52,14 @@ const DropzoneComponent: React.FC = () => {
     onDrop,
     onDropRejected,
     accept: {
-      "application/pdf": [],
+      "application/pdf": [".pdf"],
+      "application/vnd.ms-powerpoint": [".ppt"],
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        [".pptx"],
+      "application/msword": [".doc"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        [".docx"],
+      "text/plain": [".txt"],
     },
     maxSize: MAX_FILE_SIZE,
   })
@@ -84,7 +97,7 @@ const DropzoneComponent: React.FC = () => {
   const steps = [
     {
       label: "Upload Document",
-      description: "Upload your PDF file",
+      description: "Upload your document",
     },
     {
       label: "Customize Exam",
@@ -119,7 +132,8 @@ const DropzoneComponent: React.FC = () => {
                   {isDragActive ? "Drop Files Here" : "Drag & Drop Files Here"}
                 </h4>
                 <span className="mb-5 block max-w-[290px] text-center text-sm text-gray-700 dark:text-gray-400">
-                  Drag and drop your PDF documents here or browse (Max 5MB)
+                  Drag and drop your documents here or browse (PDF, DOC, DOCX,
+                  PPT, PPTX, TXT - Max 5MB)
                 </span>
                 <span className="text-theme-sm text-brand-500 font-medium underline">
                   Browse File

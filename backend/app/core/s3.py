@@ -35,7 +35,24 @@ def generate_s3_url(key: str) -> str:
 
 
 def extract_text_from_s3_file(key: str) -> str:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+    # Get file extension from key
+    extension = key.split(".")[-1].lower() if "." in key else "pdf"
+
+    # Map extensions to appropriate suffixes for textract
+    extension_map = {
+        "pdf": ".pdf",
+        "doc": ".doc",
+        "docx": ".docx",
+        "ppt": ".ppt",
+        "pptx": ".pptx",
+        "txt": ".txt",
+    }
+    suffix = extension_map.get(extension)
+
+    if not suffix:
+        raise ValueError(f"Unsupported file extension: {extension}")
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
         s3.download_fileobj(settings.S3_BUCKET, key, tmp_file)
         tmp_path = tmp_file.name
 
