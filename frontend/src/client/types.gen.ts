@@ -84,8 +84,7 @@ export type ExamPublic = {
     is_published?: boolean;
     id: string;
     owner_id: string;
-    questions?: Array<QuestionPublic>;
-    source_document_ids?: Array<string>;
+    created_at: string;
 };
 
 export type ExamsPublic = {
@@ -131,14 +130,6 @@ export type PrivateUserCreate = {
     password: string;
     full_name: string;
     is_verified?: boolean;
-};
-
-export type QuestionPublic = {
-    question: string;
-    type: QuestionType;
-    options: Array<string>;
-    correct_answer?: (string | null);
-    id: string;
 };
 
 export type QuestionType = 'multiple_choice' | 'true_false';

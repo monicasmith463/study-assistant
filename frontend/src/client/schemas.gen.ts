@@ -497,23 +497,14 @@ export const ExamPublicSchema = {
             format: 'uuid',
             title: 'Owner Id'
         },
-        questions: {
-            items: {
-                '$ref': '#/components/schemas/QuestionPublic'
-            },
-            type: 'array',
-            title: 'Questions'
-        },
-        source_document_ids: {
-            items: {
-                type: 'string'
-            },
-            type: 'array',
-            title: 'Source Document Ids'
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
         }
     },
     type: 'object',
-    required: ['title', 'id', 'owner_id'],
+    required: ['title', 'id', 'owner_id', 'created_at'],
     title: 'ExamPublic'
 } as const;
 
@@ -717,44 +708,6 @@ export const PrivateUserCreateSchema = {
     type: 'object',
     required: ['email', 'password', 'full_name'],
     title: 'PrivateUserCreate'
-} as const;
-
-export const QuestionPublicSchema = {
-    properties: {
-        question: {
-            type: 'string',
-            title: 'Question'
-        },
-        type: {
-            '$ref': '#/components/schemas/QuestionType'
-        },
-        options: {
-            items: {
-                type: 'string'
-            },
-            type: 'array',
-            title: 'Options'
-        },
-        correct_answer: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Correct Answer'
-        },
-        id: {
-            type: 'string',
-            format: 'uuid',
-            title: 'Id'
-        }
-    },
-    type: 'object',
-    required: ['question', 'type', 'options', 'id'],
-    title: 'QuestionPublic'
 } as const;
 
 export const QuestionTypeSchema = {
