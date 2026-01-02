@@ -6,7 +6,6 @@ from uuid import UUID
 from pgvector.sqlalchemy import Vector  # type: ignore
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import EmailStr
-from pydantic import Field as PydanticField
 from sqlalchemy import Column, Text
 from sqlalchemy import Enum as SQLAEnum
 from sqlmodel import JSON, Field, ForeignKey, Relationship, SQLModel
@@ -90,13 +89,13 @@ class Exam(ExamBase, table=True):
         default_factory=list,
         sa_column=Column(JSON, nullable=False),
     )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ExamPublic(ExamBase):
     id: uuid.UUID
     owner_id: uuid.UUID
-    questions: list["QuestionPublic"] = PydanticField(default_factory=list)
-    source_document_ids: list[str] = PydanticField(default_factory=list)
+    created_at: datetime
 
 
 class ExamsPublic(SQLModel):

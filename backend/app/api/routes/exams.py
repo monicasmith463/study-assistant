@@ -9,6 +9,7 @@ from app.api.deps import CurrentUser, SessionDep
 from app.core.ai.openai import generate_questions_from_documents
 from app.models import (
     Exam,
+    ExamAttempt,
     ExamCreate,
     ExamPublic,
     ExamsPublic,
@@ -103,7 +104,22 @@ def read_exams(
         )
         exams = session.exec(statement).all()
 
-    return ExamsPublic(data=exams, count=count)
+    # Calculate highest score for each exam
+    exam_publics = []
+    for exam in exams:
+        # Get the maximum score from all attempts for this exam
+        max_score_statement = (
+            select(func.max(ExamAttempt.score))
+            .where(ExamAttempt.exam_id == exam.id)
+            .where(ExamAttempt.score.isnot(None))
+        )
+        max_score = session.exec(max_score_statement).one_or_none()
+
+        exam_dict = ExamPublic.model_validate(exam).model_dump()
+        exam_dict["highest_score"] = float(max_score) if max_score is not None else None
+        exam_publics.append(ExamPublic.model_validate(exam_dict))
+
+    return ExamsPublic(data=exam_publics, count=count)
 
 
 @router.put("/{id}", response_model=ExamPublic)
