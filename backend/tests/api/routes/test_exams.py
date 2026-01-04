@@ -30,7 +30,7 @@ def test_generate_exam(
         for i in range(1, 5)
     ]
 
-    payload = {"document_ids": document_ids}
+    payload = {"document_ids": document_ids, "title": "Test Exam"}
 
     with patch(
         "app.api.routes.exams.generate_questions_from_documents",
@@ -136,6 +136,7 @@ def test_generate_exam_with_partial_customization(
     payload = {
         "document_ids": document_ids,
         "num_questions": 3,
+        "title": "Partial Customization Exam",
         "question_types": ["true_false"],
     }
 
