@@ -19,8 +19,8 @@ const DropzoneComponent: React.FC = () => {
 
   // Use the document hook to get processing state
   const { data: document } = useDocument(documentId)
-  const isProcessing = document?.status === "processing"
-  const isReady = document?.status === "ready"
+  const isProcessing = (document as any)?.status === "processing"
+  const isReady = (document as any)?.status === "ready"
 
   // Use the create document hook
   const createDocumentMutation = useCreateDocument()

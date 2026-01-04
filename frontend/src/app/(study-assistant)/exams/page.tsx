@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import Link from "next/link"
 import ComponentCard from "@/components/common/ComponentCard"
 import {
@@ -12,9 +12,16 @@ import {
   TableCell,
 } from "@/components/ui/table/Table"
 import { useExams } from "@/hooks/useExams"
+import Badge from "@/components/ui/badge/Badge"
+import DifficultyBadge from "@/components/exam/DifficultyBadge"
+import Pagination from "@/components/ui/pagination/Pagination"
+
+const ITEMS_PER_PAGE = 10
 
 export default function ExamsPage() {
-  const { data, isLoading, isError, error } = useExams()
+  const [currentPage, setCurrentPage] = useState(1)
+  const skip = (currentPage - 1) * ITEMS_PER_PAGE
+  const { data, isLoading, isError, error } = useExams(skip, ITEMS_PER_PAGE)
 
   if (isLoading) {
     return (
@@ -62,6 +69,8 @@ export default function ExamsPage() {
             <TableRow>
               <TableHeader>Title</TableHeader>
               <TableHeader>Questions</TableHeader>
+              <TableHeader>Difficulty</TableHeader>
+              <TableHeader>Question Types</TableHeader>
               <TableHeader>Highest Score</TableHeader>
               <TableHeader>Date Created</TableHeader>
               <TableHeader>Actions</TableHeader>
@@ -69,24 +78,55 @@ export default function ExamsPage() {
           </TableHead>
           <TableBody>
             {exams.map((exam) => {
-              const dateCreated = exam.created_at
-                ? new Date(exam.created_at).toLocaleString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
+              const dateCreated = (exam as any).created_at
+                ? new Date((exam as any).created_at).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    }
+                  )
                 : "—"
+
+              const questionTypes = (exam as any).question_types || []
+
+              const formatQuestionType = (type: string) => {
+                return type
+                  .split("_")
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(" ")
+              }
 
               return (
                 <TableRow key={exam.id}>
                   <TableCell className="font-medium">{exam.title}</TableCell>
                   <TableCell>{exam.questions?.length || 0}</TableCell>
                   <TableCell>
-                    {exam.highest_score !== null &&
-                    exam.highest_score !== undefined
-                      ? `${exam.highest_score.toFixed(1)}%`
+                    <DifficultyBadge difficulty={(exam as any).difficulty} />
+                  </TableCell>
+                  <TableCell>
+                    {questionTypes.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {questionTypes.map((type: string, idx: number) => (
+                          <Badge
+                            key={idx}
+                            color="info"
+                            size="sm"
+                            variant="light"
+                          >
+                            {formatQuestionType(type)}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {(exam as any).highest_score !== null &&
+                    (exam as any).highest_score !== undefined
+                      ? `${(exam as any).highest_score.toFixed(1)}%`
                       : "—"}
                   </TableCell>
                   <TableCell className="text-gray-600 dark:text-gray-400">
@@ -105,6 +145,16 @@ export default function ExamsPage() {
             })}
           </TableBody>
         </Table>
+      )}
+
+      {/* Pagination */}
+      {exams.length > 0 && data && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={data.count}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+        />
       )}
     </ComponentCard>
   )

@@ -116,6 +116,8 @@ def create_db_exam(
         is_published=exam_in.is_published,
         owner_id=owner_id,
         source_document_ids=source_document_ids,
+        difficulty=exam_in.difficulty,
+        question_types=exam_in.question_types,
     )
     session.add(db_exam)
     session.commit()

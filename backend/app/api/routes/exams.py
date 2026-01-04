@@ -31,13 +31,14 @@ async def generate_exam(
 ) -> ExamPublic:
     source_document_ids = [str(doc_id) for doc_id in payload.document_ids]
 
-    # TODO: fix the hardcoding here
     exam_in = ExamCreate(
         title="Midterm Exam",
         description="generated exam",
         duration_minutes=30,
         is_published=False,
         source_document_ids=source_document_ids,
+        difficulty=payload.difficulty if payload.difficulty else None,
+        question_types=payload.question_types if payload.question_types else [],
     )
     db_exam = crud.create_db_exam(
         session=session,

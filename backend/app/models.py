@@ -1,12 +1,13 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Optional
 from uuid import UUID
 
 from pgvector.sqlalchemy import Vector  # type: ignore
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import EmailStr
-from sqlalchemy import Column, Text
+from sqlalchemy import Column, String, Text
 from sqlalchemy import Enum as SQLAEnum
 from sqlmodel import JSON, Field, ForeignKey, Relationship, SQLModel
 
@@ -68,6 +69,12 @@ class UsersPublic(SQLModel):
     count: int
 
 
+class Difficulty(str, Enum):
+    easy = "easy"
+    medium = "medium"
+    hard = "hard"
+
+
 class ExamBase(SQLModel):
     title: str = Field(sa_column=Column(Text, nullable=False))
     description: str | None = Field(default=None, sa_column=Column(Text))
@@ -89,6 +96,12 @@ class Exam(ExamBase, table=True):
         default_factory=list,
         sa_column=Column(JSON, nullable=False),
     )
+    difficulty: Optional["Difficulty"] = Field(
+        default=None, sa_column=Column(String, nullable=True)
+    )
+    question_types: list["QuestionType"] = Field(
+        default_factory=list, sa_column=Column(JSON, nullable=False)
+    )
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -96,6 +109,11 @@ class ExamPublic(ExamBase):
     id: uuid.UUID
     owner_id: uuid.UUID
     created_at: datetime
+    questions: list["QuestionPublic"] = Field(default_factory=list)
+    source_document_ids: list[str] = Field(default_factory=list)
+    highest_score: float | None = Field(default=None)
+    difficulty: Optional["Difficulty"] = Field(default=None)
+    question_types: list["QuestionType"] = Field(default_factory=list)
 
 
 class ExamsPublic(SQLModel):
@@ -109,6 +127,8 @@ class ExamCreate(ExamBase):
     duration_minutes: int | None = Field(
         default=None, ge=1
     )  # Must be at least 1 minute
+    difficulty: Optional["Difficulty"] = None
+    question_types: list["QuestionType"] = Field(default_factory=list)
 
 
 class ExamUpdate(SQLModel):
@@ -166,15 +186,9 @@ class QuestionCreate(QuestionBase):
     options: list[str]
 
 
-class Difficulty(str, Enum):
-    easy = "easy"
-    medium = "medium"
-    hard = "hard"
-
-
 class GenerateQuestionsBase(SQLModel):
     num_questions: int = Field(default=5, ge=1, le=50)
-    difficulty: Difficulty | None = None
+    difficulty: Optional["Difficulty"] = None
     question_types: list[QuestionType] = Field(default_factory=list)
 
 
