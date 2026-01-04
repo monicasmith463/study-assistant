@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID
 
-from pgvector.sqlalchemy import Vector  # type: ignore
+from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import EmailStr
 from sqlalchemy import Column, String, Text

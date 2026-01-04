@@ -109,10 +109,10 @@ def read_exams(
     exam_publics = []
     for exam in exams:
         # Get the maximum score from all attempts for this exam
-        max_score_statement = (
+        max_score_statement: Any = (
             select(func.max(ExamAttempt.score))
             .where(ExamAttempt.exam_id == exam.id)
-            .where(ExamAttempt.score.isnot(None))
+            .where(ExamAttempt.score.is_not(None))  # type: ignore[union-attr]
         )
         max_score = session.exec(max_score_statement).one_or_none()
 

@@ -2,8 +2,8 @@ import os
 import tempfile
 import uuid
 
-import boto3
-import textract  # type: ignore
+import boto3  # type: ignore[import-untyped]
+import textract  # type: ignore[import-untyped]
 from fastapi import UploadFile
 
 from app.core.config import settings
