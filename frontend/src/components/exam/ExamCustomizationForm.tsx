@@ -9,7 +9,7 @@ import Select from "../form/Select"
 import Checkbox from "../form/input/Checkbox"
 import SpinnerButton from "../ui/button/SpinnerButton"
 import { useGenerateExam } from "@/hooks/useGenerateExam"
-import { type GenerateQuestionsRequest, type QuestionType } from "@/client"
+import { type GenerateQuestionsPublic, type QuestionType } from "@/client"
 
 type Difficulty = "easy" | "medium" | "hard"
 import { PencilIcon } from "@/icons"
@@ -54,7 +54,7 @@ export default function ExamCustomizationForm({
     const validNumQuestions =
       typeof numQuestions === "number" && numQuestions > 0 ? numQuestions : 5
 
-    const payload: GenerateQuestionsRequest & {
+    const payload: GenerateQuestionsPublic & {
       num_questions?: number
       difficulty?: Difficulty | null
       question_types?: QuestionType[]

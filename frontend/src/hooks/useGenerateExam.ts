@@ -1,15 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   ExamsService,
-  type GenerateQuestionsRequest,
+  type GenerateQuestionsPublic,
   type ExamPublic,
 } from "@/client"
 
 export function useGenerateExam() {
   const queryClient = useQueryClient()
 
-  return useMutation<ExamPublic, Error, GenerateQuestionsRequest>({
-    mutationFn: async (data: GenerateQuestionsRequest) => {
+  return useMutation<ExamPublic, Error, GenerateQuestionsPublic>({
+    mutationFn: async (data: GenerateQuestionsPublic) => {
       return ExamsService.generateExam({ requestBody: data })
     },
 
