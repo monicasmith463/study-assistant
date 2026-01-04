@@ -82,7 +82,7 @@ export default function ExamCustomizationForm({
             id="num_questions"
             name="num_questions"
             min={5}
-            max={20}
+            max={10}
             value={numQuestions}
             onChange={(e) => {
               const value = e.target.value
@@ -98,7 +98,7 @@ export default function ExamCustomizationForm({
             className="mt-1.5"
           />
           <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-            Choose between 5 and 20 questions
+            Choose between 5 and 10 questions
           </p>
         </div>
 
