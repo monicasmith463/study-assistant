@@ -29,6 +29,8 @@ export type Body_login_login_access_token = {
     client_secret?: (string | null);
 };
 
+export type Difficulty = 'easy' | 'medium' | 'hard';
+
 export type DocumentPublic = {
     filename: string;
     s3_url?: (string | null);
@@ -38,12 +40,15 @@ export type DocumentPublic = {
     id: string;
     owner_id: string;
     extracted_text?: (string | null);
+    status: DocumentStatus;
 };
 
 export type DocumentsPublic = {
     data: Array<DocumentPublic>;
     count: number;
 };
+
+export type DocumentStatus = 'processing' | 'ready' | 'failed';
 
 export type DocumentUpdate = {
     filename?: (string | null);
@@ -79,8 +84,12 @@ export type ExamPublic = {
     is_published?: boolean;
     id: string;
     owner_id: string;
+    created_at: string;
     questions?: Array<QuestionPublic>;
     source_document_ids?: Array<string>;
+    highest_score?: (number | null);
+    difficulty?: (Difficulty | null);
+    question_types?: Array<QuestionType>;
 };
 
 export type ExamsPublic = {
@@ -101,34 +110,16 @@ export type ExplanationOutput = {
     suggested_review: string;
 };
 
-export type GenerateQuestionsRequest = {
+export type GenerateQuestionsPublic = {
+    num_questions?: number;
+    difficulty?: (Difficulty | null);
+    question_types?: Array<QuestionType>;
     document_ids: Array<string>;
+    title: string;
 };
 
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
-};
-
-export type ItemCreate = {
-    title: string;
-    description?: (string | null);
-};
-
-export type ItemPublic = {
-    title: string;
-    description?: (string | null);
-    id: string;
-    owner_id: string;
-};
-
-export type ItemsPublic = {
-    data: Array<ItemPublic>;
-    count: number;
-};
-
-export type ItemUpdate = {
-    title?: (string | null);
-    description?: (string | null);
 };
 
 export type Message = {
@@ -258,7 +249,7 @@ export type ExamAttemptsReadExamAttemptData = {
 export type ExamAttemptsReadExamAttemptResponse = (ExamAttemptPublic);
 
 export type ExamsGenerateExamData = {
-    requestBody: GenerateQuestionsRequest;
+    requestBody: GenerateQuestionsPublic;
 };
 
 export type ExamsGenerateExamResponse = (ExamPublic);
@@ -288,38 +279,6 @@ export type ExamsReadExamsData = {
 };
 
 export type ExamsReadExamsResponse = (ExamsPublic);
-
-export type ItemsReadItemsData = {
-    limit?: number;
-    skip?: number;
-};
-
-export type ItemsReadItemsResponse = (ItemsPublic);
-
-export type ItemsCreateItemData = {
-    requestBody: ItemCreate;
-};
-
-export type ItemsCreateItemResponse = (ItemPublic);
-
-export type ItemsReadItemData = {
-    id: string;
-};
-
-export type ItemsReadItemResponse = (ItemPublic);
-
-export type ItemsUpdateItemData = {
-    id: string;
-    requestBody: ItemUpdate;
-};
-
-export type ItemsUpdateItemResponse = (ItemPublic);
-
-export type ItemsDeleteItemData = {
-    id: string;
-};
-
-export type ItemsDeleteItemResponse = (Message);
 
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;

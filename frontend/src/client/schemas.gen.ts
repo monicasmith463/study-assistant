@@ -157,6 +157,12 @@ export const Body_login_login_access_tokenSchema = {
     title: 'Body_login-login_access_token'
 } as const;
 
+export const DifficultySchema = {
+    type: 'string',
+    enum: ['easy', 'medium', 'hard'],
+    title: 'Difficulty'
+} as const;
+
 export const DocumentPublicSchema = {
     properties: {
         filename: {
@@ -229,11 +235,20 @@ export const DocumentPublicSchema = {
                 }
             ],
             title: 'Extracted Text'
+        },
+        status: {
+            '$ref': '#/components/schemas/DocumentStatus'
         }
     },
     type: 'object',
-    required: ['filename', 'id', 'owner_id'],
+    required: ['filename', 'id', 'owner_id', 'status'],
     title: 'DocumentPublic'
+} as const;
+
+export const DocumentStatusSchema = {
+    type: 'string',
+    enum: ['processing', 'ready', 'failed'],
+    title: 'DocumentStatus'
 } as const;
 
 export const DocumentUpdateSchema = {
@@ -482,6 +497,11 @@ export const ExamPublicSchema = {
             format: 'uuid',
             title: 'Owner Id'
         },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
         questions: {
             items: {
                 '$ref': '#/components/schemas/QuestionPublic'
@@ -495,10 +515,38 @@ export const ExamPublicSchema = {
             },
             type: 'array',
             title: 'Source Document Ids'
+        },
+        highest_score: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Highest Score'
+        },
+        difficulty: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/Difficulty'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        question_types: {
+            items: {
+                '$ref': '#/components/schemas/QuestionType'
+            },
+            type: 'array',
+            title: 'Question Types'
         }
     },
     type: 'object',
-    required: ['title', 'id', 'owner_id'],
+    required: ['title', 'id', 'owner_id', 'created_at'],
     title: 'ExamPublic'
 } as const;
 
@@ -595,8 +643,32 @@ export const ExplanationOutputSchema = {
     title: 'ExplanationOutput'
 } as const;
 
-export const GenerateQuestionsRequestSchema = {
+export const GenerateQuestionsPublicSchema = {
     properties: {
+        num_questions: {
+            type: 'integer',
+            maximum: 50,
+            minimum: 1,
+            title: 'Num Questions',
+            default: 5
+        },
+        difficulty: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/Difficulty'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        question_types: {
+            items: {
+                '$ref': '#/components/schemas/QuestionType'
+            },
+            type: 'array',
+            title: 'Question Types'
+        },
         document_ids: {
             items: {
                 type: 'string',
@@ -604,11 +676,17 @@ export const GenerateQuestionsRequestSchema = {
             },
             type: 'array',
             title: 'Document Ids'
+        },
+        title: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Title'
         }
     },
     type: 'object',
-    required: ['document_ids'],
-    title: 'GenerateQuestionsRequest'
+    required: ['document_ids', 'title'],
+    title: 'GenerateQuestionsPublic'
 } as const;
 
 export const HTTPValidationErrorSchema = {
@@ -623,119 +701,6 @@ export const HTTPValidationErrorSchema = {
     },
     type: 'object',
     title: 'HTTPValidationError'
-} as const;
-
-export const ItemCreateSchema = {
-    properties: {
-        title: {
-            type: 'string',
-            maxLength: 255,
-            minLength: 1,
-            title: 'Title'
-        },
-        description: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Description'
-        }
-    },
-    type: 'object',
-    required: ['title'],
-    title: 'ItemCreate'
-} as const;
-
-export const ItemPublicSchema = {
-    properties: {
-        title: {
-            type: 'string',
-            maxLength: 255,
-            minLength: 1,
-            title: 'Title'
-        },
-        description: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Description'
-        },
-        id: {
-            type: 'string',
-            format: 'uuid',
-            title: 'Id'
-        },
-        owner_id: {
-            type: 'string',
-            format: 'uuid',
-            title: 'Owner Id'
-        }
-    },
-    type: 'object',
-    required: ['title', 'id', 'owner_id'],
-    title: 'ItemPublic'
-} as const;
-
-export const ItemUpdateSchema = {
-    properties: {
-        title: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255,
-                    minLength: 1
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Title'
-        },
-        description: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Description'
-        }
-    },
-    type: 'object',
-    title: 'ItemUpdate'
-} as const;
-
-export const ItemsPublicSchema = {
-    properties: {
-        data: {
-            items: {
-                '$ref': '#/components/schemas/ItemPublic'
-            },
-            type: 'array',
-            title: 'Data'
-        },
-        count: {
-            type: 'integer',
-            title: 'Count'
-        }
-    },
-    type: 'object',
-    required: ['data', 'count'],
-    title: 'ItemsPublic'
 } as const;
 
 export const MessageSchema = {
