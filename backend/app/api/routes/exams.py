@@ -9,6 +9,7 @@ from app.api.deps import CurrentUser, SessionDep
 from app.core.ai.openai import generate_questions_from_documents
 from app.models import (
     Exam,
+    ExamAttempt,
     ExamCreate,
     ExamPublic,
     ExamsPublic,
@@ -30,13 +31,14 @@ async def generate_exam(
 ) -> ExamPublic:
     source_document_ids = [str(doc_id) for doc_id in payload.document_ids]
 
-    # TODO: fix the hardcoding here
     exam_in = ExamCreate(
-        title="Midterm Exam",
+        title=payload.title,
         description="generated exam",
         duration_minutes=30,
         is_published=False,
         source_document_ids=source_document_ids,
+        difficulty=payload.difficulty if payload.difficulty else None,
+        question_types=payload.question_types if payload.question_types else [],
     )
     db_exam = crud.create_db_exam(
         session=session,
@@ -103,7 +105,22 @@ def read_exams(
         )
         exams = session.exec(statement).all()
 
-    return ExamsPublic(data=exams, count=count)
+    # Calculate highest score for each exam
+    exam_publics = []
+    for exam in exams:
+        # Get the maximum score from all attempts for this exam
+        max_score_statement: Any = (
+            select(func.max(ExamAttempt.score))
+            .where(ExamAttempt.exam_id == exam.id)
+            .where(ExamAttempt.score.is_not(None))  # type: ignore[union-attr]
+        )
+        max_score = session.exec(max_score_statement).one_or_none()
+
+        exam_dict = ExamPublic.model_validate(exam).model_dump()
+        exam_dict["highest_score"] = float(max_score) if max_score is not None else None
+        exam_publics.append(ExamPublic.model_validate(exam_dict))
+
+    return ExamsPublic(data=exam_publics, count=count)
 
 
 @router.put("/{id}", response_model=ExamPublic)

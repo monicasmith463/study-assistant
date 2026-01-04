@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ExamsService, type ExamPublic, type ExamAttemptPublic } from "@/client"
 import { createExamAttempt } from "@/api/examAttempts"
 
@@ -16,6 +16,8 @@ export function useExam(examId: string | null) {
 }
 
 export function useSubmitExam() {
+  const queryClient = useQueryClient()
+
   return useMutation<
     ExamAttemptPublic,
     Error,
@@ -23,6 +25,10 @@ export function useSubmitExam() {
   >({
     mutationFn: async ({ exam_id, answers }) => {
       return createExamAttempt(exam_id, answers)
+    },
+    onSuccess: () => {
+      // Invalidate exams query to refresh the highest score
+      queryClient.invalidateQueries({ queryKey: ["exams"] })
     },
   })
 }

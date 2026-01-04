@@ -9,11 +9,9 @@ import Select from "../form/Select"
 import Checkbox from "../form/input/Checkbox"
 import SpinnerButton from "../ui/button/SpinnerButton"
 import { useGenerateExam } from "@/hooks/useGenerateExam"
-import {
-  type GenerateQuestionsPublic,
-  type Difficulty,
-  type QuestionType,
-} from "@/client"
+import { type GenerateQuestionsPublic, type QuestionType } from "@/client"
+
+type Difficulty = "easy" | "medium" | "hard"
 import { PencilIcon } from "@/icons"
 
 type ExamCustomizationFormProps = {
@@ -24,6 +22,8 @@ export default function ExamCustomizationForm({
   documentId,
 }: ExamCustomizationFormProps) {
   const router = useRouter()
+  const [title, setTitle] = useState<string>("")
+  const [titleError, setTitleError] = useState<string>("")
   const [numQuestions, setNumQuestions] = useState<number | "">(5)
   const [difficulty, setDifficulty] = useState<Difficulty | "">("")
   const [questionTypes, setQuestionTypes] = useState<QuestionType[]>([])
@@ -52,15 +52,25 @@ export default function ExamCustomizationForm({
       e.preventDefault()
     }
 
+    // Validate title
+    if (!title.trim()) {
+      setTitleError("Exam title is required")
+      return
+    }
+    setTitleError("")
+
     // Ensure num_questions is valid (default to 5 if empty or invalid)
     const validNumQuestions =
       typeof numQuestions === "number" && numQuestions > 0 ? numQuestions : 5
 
-    const payload: GenerateQuestionsPublic = {
+    const payload = {
       document_ids: [documentId],
+      title: title.trim(),
       num_questions: validNumQuestions,
       difficulty: difficulty === "" ? null : (difficulty as Difficulty),
       question_types: questionTypes.length > 0 ? questionTypes : undefined,
+    } as GenerateQuestionsPublic & {
+      title: string
     }
 
     generateExamMutation.mutate(payload, {
@@ -72,6 +82,35 @@ export default function ExamCustomizationForm({
   return (
     <ComponentCard title="Customize Your Exam">
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Exam Title */}
+        <div>
+          <Label htmlFor="exam_title">Exam Title</Label>
+          <InputField
+            type="text"
+            id="exam_title"
+            name="exam_title"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              if (titleError) {
+                setTitleError("")
+              }
+            }}
+            placeholder="e.g., Chapter 5 Quiz, Final Exam, Practice Test"
+            error={!!titleError}
+            className="mt-1.5"
+          />
+          {titleError ? (
+            <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">
+              {titleError}
+            </p>
+          ) : (
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              Give your exam a descriptive title to help you identify it later
+            </p>
+          )}
+        </div>
+
         {/* Number of Questions */}
         <div>
           <Label htmlFor="num_questions">Number of Questions</Label>
@@ -80,7 +119,7 @@ export default function ExamCustomizationForm({
             id="num_questions"
             name="num_questions"
             min={5}
-            max={20}
+            max={10}
             value={numQuestions}
             onChange={(e) => {
               const value = e.target.value
@@ -96,7 +135,7 @@ export default function ExamCustomizationForm({
             className="mt-1.5"
           />
           <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-            Choose between 5 and 20 questions
+            Choose between 5 and 10 questions
           </p>
         </div>
 
@@ -150,7 +189,7 @@ export default function ExamCustomizationForm({
             variant="primary"
             startIcon={<PencilIcon />}
             onClick={() => handleSubmit()}
-            disabled={generateExamMutation.isPending}
+            disabled={generateExamMutation.isPending || !title.trim()}
             loading={generateExamMutation.isPending}
           >
             Generate Exam

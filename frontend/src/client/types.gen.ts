@@ -84,8 +84,12 @@ export type ExamPublic = {
     is_published?: boolean;
     id: string;
     owner_id: string;
+    created_at: string;
     questions?: Array<QuestionPublic>;
     source_document_ids?: Array<string>;
+    highest_score?: (number | null);
+    difficulty?: (Difficulty | null);
+    question_types?: Array<QuestionType>;
 };
 
 export type ExamsPublic = {
@@ -111,6 +115,7 @@ export type GenerateQuestionsPublic = {
     difficulty?: (Difficulty | null);
     question_types?: Array<QuestionType>;
     document_ids: Array<string>;
+    title: string;
 };
 
 export type HTTPValidationError = {

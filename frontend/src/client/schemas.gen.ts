@@ -497,6 +497,11 @@ export const ExamPublicSchema = {
             format: 'uuid',
             title: 'Owner Id'
         },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
         questions: {
             items: {
                 '$ref': '#/components/schemas/QuestionPublic'
@@ -510,10 +515,38 @@ export const ExamPublicSchema = {
             },
             type: 'array',
             title: 'Source Document Ids'
+        },
+        highest_score: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Highest Score'
+        },
+        difficulty: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/Difficulty'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        question_types: {
+            items: {
+                '$ref': '#/components/schemas/QuestionType'
+            },
+            type: 'array',
+            title: 'Question Types'
         }
     },
     type: 'object',
-    required: ['title', 'id', 'owner_id'],
+    required: ['title', 'id', 'owner_id', 'created_at'],
     title: 'ExamPublic'
 } as const;
 
@@ -643,10 +676,16 @@ export const GenerateQuestionsPublicSchema = {
             },
             type: 'array',
             title: 'Document Ids'
+        },
+        title: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Title'
         }
     },
     type: 'object',
-    required: ['document_ids'],
+    required: ['document_ids', 'title'],
     title: 'GenerateQuestionsPublic'
 } as const;
 
