@@ -57,6 +57,7 @@ def test_generate_exam(
 
     # assert "id" in content[0], "Generated exam should have an ID"
     # assert "owner_id" in content[0], "Generated exam should have an owner ID"
+    assert content["title"] == "Test Exam", "Exam title should match payload"
 
     assert len(content["questions"]) == len(
         mock_questions
@@ -82,6 +83,7 @@ def test_generate_exam_with_customization(
 
     payload = {
         "document_ids": document_ids,
+        "title": "Customized Test Exam",
         "num_questions": 7,
         "difficulty": "hard",
         "question_types": ["multiple_choice"],
@@ -106,6 +108,9 @@ def test_generate_exam_with_customization(
     assert call_args[1]["num_questions"] == 7
     assert call_args[1]["difficulty"] == Difficulty.hard
     assert call_args[1]["question_types"] == [QuestionType.multiple_choice]
+
+    # Verify exam was created with correct title
+    assert content["title"] == "Customized Test Exam", "Exam title should match payload"
 
     # Verify exam was created with correct number of questions
     assert len(content["questions"]) == 7
@@ -154,6 +159,11 @@ def test_generate_exam_with_partial_customization(
     assert call_args[1]["difficulty"] is None  # not specified
     assert call_args[1]["question_types"] == [QuestionType.true_false]
 
+    # Verify exam was created with correct title
+    assert (
+        content["title"] == "Partial Customization Exam"
+    ), "Exam title should match payload"
+
     assert len(content["questions"]) == 3
 
 
@@ -170,7 +180,7 @@ def skip_test_generate_exam_real(
         0
     ].extracted_text, f"Documents should have extracted text. documents: {documents}"
 
-    payload = {"document_ids": document_ids}
+    payload = {"document_ids": document_ids, "title": "Real API Test Exam"}
 
     response = client.post(
         f"{settings.API_V1_STR}/exams/generate",

@@ -32,7 +32,7 @@ async def generate_exam(
     source_document_ids = [str(doc_id) for doc_id in payload.document_ids]
 
     exam_in = ExamCreate(
-        title="Midterm Exam",
+        title=payload.title,
         description="generated exam",
         duration_minutes=30,
         is_published=False,

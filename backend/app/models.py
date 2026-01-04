@@ -194,6 +194,7 @@ class GenerateQuestionsBase(SQLModel):
 
 class GenerateQuestionsPublic(GenerateQuestionsBase):
     document_ids: list[uuid.UUID]
+    title: str = Field(min_length=1, max_length=255)
 
 
 class ExamAttemptBase(SQLModel):
