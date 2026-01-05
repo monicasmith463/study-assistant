@@ -16,6 +16,7 @@ from app.models import (
     Document,
     ExplanationOutput,
     QuestionCreate,
+    QuestionItem,
     QuestionOutput,
     QuestionType,
 )
@@ -57,11 +58,15 @@ Rules (must follow exactly):
   - options (array of strings)
 
 - For true_false questions:
+  - type MUST be "true_false"
   - options MUST be exactly ["True", "False"]
+  - Do NOT use true_false type with multiple choice options
 
 - For multiple_choice questions:
-  - options MUST contain at least 3 plausible choices
+  - type MUST be "multiple_choice"
+  - options MUST contain at least 3 plausible choices (not just True/False)
   - answer MUST match exactly one option
+  - Do NOT use multiple_choice type with only True/False options
 
 Difficulty rules:
 - EASY:
@@ -93,6 +98,11 @@ Document text:
 Difficulty: {difficulty_str}
 Allowed question types: {question_types_str}
 
+CRITICAL: The question type MUST match the options:
+- If type is "true_false", options MUST be exactly ["True", "False"]
+- If type is "multiple_choice", options MUST have at least 3 different choices (NOT True/False)
+- Do NOT mix types: a true_false question cannot have multiple choice options, and vice versa
+
 """
 
 
@@ -111,17 +121,37 @@ def fetch_document_texts(session: Session, document_ids: list[UUID]) -> list[str
 
 
 def validate_and_convert_question_item(q: Any) -> QuestionCreate | None:
-    """Validate LLM question item and convert to QuestionCreate."""
+    """Validate LLM question item and convert to QuestionCreate.
+
+    Validation is handled by Pydantic validators in QuestionItem model.
+    """
     try:
+        # Convert to dict if it's a MagicMock or other object with attributes
+        if isinstance(q, QuestionItem):
+            question_item = q
+        elif isinstance(q, dict):
+            question_item = QuestionItem.model_validate(q)
+        else:
+            # Handle MagicMock or other objects with attributes
+            q_dict = {
+                "question": getattr(q, "question", ""),
+                "answer": getattr(q, "answer", None),
+                "type": getattr(q, "type", ""),
+                "options": getattr(q, "options", []),
+            }
+            question_item = QuestionItem.model_validate(q_dict)
+
+        # Pydantic validators in QuestionItem will automatically correct type/options mismatches
+
         return QuestionCreate(
-            question=q.question,
-            correct_answer=q.answer,
-            type=QuestionType(q.type),
-            options=q.options,
+            question=question_item.question,
+            correct_answer=question_item.answer,
+            type=QuestionType(question_item.type),
+            options=question_item.options,
         )
-    except ValidationError as ve:
+    except (ValidationError, ValueError) as ve:
         logger.error(f"Validation error for question item {q}: {ve}")
-        raise
+        return None
 
 
 def parse_llm_output(llm_output: Any) -> list[QuestionCreate]:

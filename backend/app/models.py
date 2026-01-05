@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]
 from pydantic import BaseModel as PydanticBaseModel
-from pydantic import EmailStr
+from pydantic import EmailStr, model_validator
 from sqlalchemy import Column, String, Text
 from sqlalchemy import Enum as SQLAEnum
 from sqlmodel import JSON, Field, ForeignKey, Relationship, SQLModel
@@ -419,6 +419,42 @@ class QuestionItem(PydanticBaseModel):
     answer: str | None
     type: str
     options: list[str]  # required!
+
+    @model_validator(mode="after")
+    def validate_type_matches_options(self) -> "QuestionItem":
+        """Validate and correct question type based on options."""
+        options = self.options
+
+        # Check if options match true_false pattern
+        if isinstance(options, list):
+            if len(options) == 2:
+                options_lower = [str(opt).strip().lower() for opt in options]
+                if set(options_lower) == {"true", "false"}:
+                    # Options are True/False, so type must be true_false
+                    self.type = "true_false"
+                    # Normalize options to ["True", "False"]
+                    self.options = ["True", "False"]
+            elif len(options) >= 3:
+                # Options have 3+ items, so type must be multiple_choice
+                self.type = "multiple_choice"
+
+        # Final validation: ensure type matches options
+        if self.type == "true_false":
+            if not (
+                isinstance(self.options, list)
+                and len(self.options) == 2
+                and {str(opt).strip().lower() for opt in self.options}
+                == {"true", "false"}
+            ):
+                # Fix options to be ["True", "False"]
+                self.options = ["True", "False"]
+        elif self.type == "multiple_choice":
+            if not (isinstance(self.options, list) and len(self.options) >= 3):
+                raise ValueError(
+                    f"Multiple choice question must have at least 3 options, got {len(self.options) if isinstance(self.options, list) else 0}"
+                )
+
+        return self
 
 
 class QuestionOutput(PydanticBaseModel):
