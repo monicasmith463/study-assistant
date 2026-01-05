@@ -16,7 +16,6 @@ from app.models import (
     Document,
     ExplanationOutput,
     QuestionCreate,
-    QuestionItem,
     QuestionOutput,
     QuestionType,
 )
@@ -121,37 +120,17 @@ def fetch_document_texts(session: Session, document_ids: list[UUID]) -> list[str
 
 
 def validate_and_convert_question_item(q: Any) -> QuestionCreate | None:
-    """Validate LLM question item and convert to QuestionCreate.
-
-    Validation is handled by Pydantic validators in QuestionItem model.
-    """
+    """Validate LLM question item and convert to QuestionCreate."""
     try:
-        # Convert to dict if it's a MagicMock or other object with attributes
-        if isinstance(q, QuestionItem):
-            question_item = q
-        elif isinstance(q, dict):
-            question_item = QuestionItem.model_validate(q)
-        else:
-            # Handle MagicMock or other objects with attributes
-            q_dict = {
-                "question": getattr(q, "question", ""),
-                "answer": getattr(q, "answer", None),
-                "type": getattr(q, "type", ""),
-                "options": getattr(q, "options", []),
-            }
-            question_item = QuestionItem.model_validate(q_dict)
-
-        # Pydantic validators in QuestionItem will automatically correct type/options mismatches
-
         return QuestionCreate(
-            question=question_item.question,
-            correct_answer=question_item.answer,
-            type=QuestionType(question_item.type),
-            options=question_item.options,
+            question=q.question,
+            correct_answer=q.answer,
+            type=QuestionType(q.type),
+            options=q.options,
         )
-    except (ValidationError, ValueError) as ve:
+    except ValidationError as ve:
         logger.error(f"Validation error for question item {q}: {ve}")
-        return None
+        raise
 
 
 def parse_llm_output(llm_output: Any) -> list[QuestionCreate]:
