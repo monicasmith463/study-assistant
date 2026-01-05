@@ -57,11 +57,15 @@ Rules (must follow exactly):
   - options (array of strings)
 
 - For true_false questions:
+  - type MUST be "true_false"
   - options MUST be exactly ["True", "False"]
+  - Do NOT use true_false type with multiple choice options
 
 - For multiple_choice questions:
-  - options MUST contain at least 3 plausible choices
+  - type MUST be "multiple_choice"
+  - options MUST contain at least 3 plausible choices (not just True/False)
   - answer MUST match exactly one option
+  - Do NOT use multiple_choice type with only True/False options
 
 Difficulty rules:
 - EASY:
@@ -92,6 +96,11 @@ Document text:
 
 Difficulty: {difficulty_str}
 Allowed question types: {question_types_str}
+
+CRITICAL: The question type MUST match the options:
+- If type is "true_false", options MUST be exactly ["True", "False"]
+- If type is "multiple_choice", options MUST have at least 3 different choices (NOT True/False)
+- Do NOT mix types: a true_false question cannot have multiple choice options, and vice versa
 
 """
 
