@@ -10,6 +10,9 @@ import Checkbox from "../form/input/Checkbox"
 import SpinnerButton from "../ui/button/SpinnerButton"
 import { useGenerateExam } from "@/hooks/useGenerateExam"
 import { type GenerateQuestionsPublic, type QuestionType } from "@/client"
+import { useToast } from "@/hooks/useToast"
+import ToastContainer from "../ui/toast/ToastContainer"
+import { ApiError } from "@/client/core/ApiError"
 
 type Difficulty = "easy" | "medium" | "hard"
 import { PencilIcon } from "@/icons"
@@ -29,14 +32,27 @@ export default function ExamCustomizationForm({
   const [questionTypes, setQuestionTypes] = useState<QuestionType[]>([])
 
   const generateExamMutation = useGenerateExam()
+  const { toasts, showError, removeToast } = useToast()
 
   // Handle success and error in the form submission
   const handleMutationSuccess = (data: { id: string }) => {
     router.push(`/take-exam?exam_id=${data.id}`)
   }
 
-  const handleMutationError = () => {
-    router.push("/error-500")
+  const handleMutationError = (error: Error) => {
+    // Check if it's a 500 error
+    if (error instanceof ApiError && error.status === 500) {
+      showError(
+        "Failed to generate exam. The server encountered an error. Please try again later.",
+        7000
+      )
+    } else {
+      // For other errors, still show a toast but with a different message
+      showError(
+        error.message || "Failed to generate exam. Please try again.",
+        5000
+      )
+    }
   }
 
   const handleQuestionTypeChange = (type: QuestionType, checked: boolean) => {
@@ -80,122 +96,125 @@ export default function ExamCustomizationForm({
   }
 
   return (
-    <ComponentCard title="Customize Your Exam">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Exam Title */}
-        <div>
-          <Label htmlFor="exam_title">Exam Title</Label>
-          <InputField
-            type="text"
-            id="exam_title"
-            name="exam_title"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value)
-              if (titleError) {
-                setTitleError("")
-              }
-            }}
-            placeholder="e.g., Chapter 5 Quiz, Final Exam, Practice Test"
-            error={!!titleError}
-            className="mt-1.5"
-          />
-          {titleError ? (
-            <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">
-              {titleError}
-            </p>
-          ) : (
-            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-              Give your exam a descriptive title to help you identify it later
-            </p>
-          )}
-        </div>
-
-        {/* Number of Questions */}
-        <div>
-          <Label htmlFor="num_questions">Number of Questions</Label>
-          <InputField
-            type="number"
-            id="num_questions"
-            name="num_questions"
-            min={5}
-            max={10}
-            value={numQuestions}
-            onChange={(e) => {
-              const value = e.target.value
-              if (value === "") {
-                setNumQuestions("")
-              } else {
-                const num = parseInt(value, 10)
-                if (!isNaN(num)) {
-                  setNumQuestions(num)
+    <>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ComponentCard title="Customize Your Exam">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Exam Title */}
+          <div>
+            <Label htmlFor="exam_title">Exam Title</Label>
+            <InputField
+              type="text"
+              id="exam_title"
+              name="exam_title"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                if (titleError) {
+                  setTitleError("")
                 }
-              }
-            }}
-            className="mt-1.5"
-          />
-          <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-            Choose between 5 and 10 questions
-          </p>
-        </div>
-
-        {/* Difficulty */}
-        <div>
-          <Label htmlFor="difficulty">Difficulty (Optional)</Label>
-          <Select
-            options={[
-              { value: "", label: "Any Difficulty" },
-              { value: "easy", label: "Easy" },
-              { value: "medium", label: "Medium" },
-              { value: "hard", label: "Hard" },
-            ]}
-            placeholder="Select difficulty"
-            defaultValue=""
-            onChange={(value) => setDifficulty(value as Difficulty | "")}
-            className="mt-1.5"
-          />
-        </div>
-
-        {/* Question Types */}
-        <div>
-          <Label>Question Types (Optional)</Label>
-          <div className="mt-3 space-y-3">
-            <Checkbox
-              id="multiple_choice"
-              label="Multiple Choice"
-              checked={questionTypes.includes("multiple_choice")}
-              onChange={(checked) =>
-                handleQuestionTypeChange("multiple_choice", checked)
-              }
+              }}
+              placeholder="e.g., Chapter 5 Quiz, Final Exam, Practice Test"
+              error={!!titleError}
+              className="mt-1.5"
             />
-            <Checkbox
-              id="true_false"
-              label="True/False"
-              checked={questionTypes.includes("true_false")}
-              onChange={(checked) =>
-                handleQuestionTypeChange("true_false", checked)
-              }
+            {titleError ? (
+              <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">
+                {titleError}
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                Give your exam a descriptive title to help you identify it later
+              </p>
+            )}
+          </div>
+
+          {/* Number of Questions */}
+          <div>
+            <Label htmlFor="num_questions">Number of Questions</Label>
+            <InputField
+              type="number"
+              id="num_questions"
+              name="num_questions"
+              min={5}
+              max={10}
+              value={numQuestions}
+              onChange={(e) => {
+                const value = e.target.value
+                if (value === "") {
+                  setNumQuestions("")
+                } else {
+                  const num = parseInt(value, 10)
+                  if (!isNaN(num)) {
+                    setNumQuestions(num)
+                  }
+                }
+              }}
+              className="mt-1.5"
+            />
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              Choose between 5 and 10 questions
+            </p>
+          </div>
+
+          {/* Difficulty */}
+          <div>
+            <Label htmlFor="difficulty">Difficulty (Optional)</Label>
+            <Select
+              options={[
+                { value: "", label: "Any Difficulty" },
+                { value: "easy", label: "Easy" },
+                { value: "medium", label: "Medium" },
+                { value: "hard", label: "Hard" },
+              ]}
+              placeholder="Select difficulty"
+              defaultValue=""
+              onChange={(value) => setDifficulty(value as Difficulty | "")}
+              className="mt-1.5"
             />
           </div>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            Leave unchecked to include all question types
-          </p>
-        </div>
 
-        {/* Submit Button */}
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <SpinnerButton
-            size="md"
-            variant="primary"
-            startIcon={<PencilIcon />}
-            onClick={() => handleSubmit()}
-            disabled={generateExamMutation.isPending || !title.trim()}
-            loading={generateExamMutation.isPending}
-          >
-            Generate Exam
-          </SpinnerButton>
-        </div>
-      </form>
-    </ComponentCard>
+          {/* Question Types */}
+          <div>
+            <Label>Question Types (Optional)</Label>
+            <div className="mt-3 space-y-3">
+              <Checkbox
+                id="multiple_choice"
+                label="Multiple Choice"
+                checked={questionTypes.includes("multiple_choice")}
+                onChange={(checked) =>
+                  handleQuestionTypeChange("multiple_choice", checked)
+                }
+              />
+              <Checkbox
+                id="true_false"
+                label="True/False"
+                checked={questionTypes.includes("true_false")}
+                onChange={(checked) =>
+                  handleQuestionTypeChange("true_false", checked)
+                }
+              />
+            </div>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Leave unchecked to include all question types
+            </p>
+          </div>
+
+          {/* Submit Button */}
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <SpinnerButton
+              size="md"
+              variant="primary"
+              startIcon={<PencilIcon />}
+              onClick={() => handleSubmit()}
+              disabled={generateExamMutation.isPending || !title.trim()}
+              loading={generateExamMutation.isPending}
+            >
+              Generate Exam
+            </SpinnerButton>
+          </div>
+        </form>
+      </ComponentCard>
+    </>
   )
 }
