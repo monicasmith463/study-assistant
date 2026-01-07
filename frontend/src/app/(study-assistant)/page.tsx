@@ -73,7 +73,7 @@ export default function LandingPage() {
                 <img
                   src="/pdf.svg"
                   alt="PDF"
-                  className="animate-float-slow w-32 translate-y-2 -rotate-[12deg] transition-all duration-700 ease-in-out group-hover:translate-y-0 sm:w-40 md:w-48 lg:w-56 xl:w-64"
+                  className="animate-float-slow w-32 translate-y-2 -rotate-[12deg] transition-all duration-700 ease-in-out group-hover:translate-x-2 group-hover:translate-y-0 sm:w-40 md:w-48 lg:w-56 xl:w-64"
                 />
                 <img
                   src="/powerpoint.svg"
@@ -83,7 +83,7 @@ export default function LandingPage() {
                 <img
                   src="/word.svg"
                   alt="Word"
-                  className="animate-float-slow-delay-2 w-32 -translate-x-6 translate-y-2 rotate-[12deg] transition-all duration-700 ease-in-out group-hover:translate-y-0 sm:w-40 sm:-translate-x-8 md:w-48 md:-translate-x-10 lg:w-56 lg:-translate-x-12 xl:w-64 xl:-translate-x-12"
+                  className="animate-float-slow-delay-2 w-32 -translate-x-6 translate-y-2 rotate-[12deg] transition-all duration-700 ease-in-out group-hover:-translate-x-8 group-hover:translate-y-0 sm:w-40 sm:-translate-x-8 sm:group-hover:-translate-x-10 md:w-48 md:-translate-x-10 md:group-hover:-translate-x-12 lg:w-56 lg:-translate-x-12 lg:group-hover:-translate-x-14 xl:w-64 xl:-translate-x-12 xl:group-hover:-translate-x-16"
                 />
               </div>
             </div>
