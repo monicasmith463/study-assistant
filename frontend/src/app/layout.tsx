@@ -11,7 +11,7 @@ OpenAPI.TOKEN = async () => {
   return localStorage.getItem("access_token") || ""
 }
 
-OpenAPI.BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+OpenAPI.BASE = process.env.NEXT_PUBLIC_API_URL!
 
 const queryClient = new QueryClient()
 
