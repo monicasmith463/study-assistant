@@ -123,13 +123,16 @@ When generating feedback for incorrect answers, the system performs **Top-K sema
 
 ## Quick Start
 
+### Backend Development Mode
+
 .env is provided (just change the secrets to your own)
 
 ```bash
 git clone https://github.com/monicasmith463/midterm-mock
 cd midterm-mock
-docker compose up --build
 ```
+
+Then follow the instructions in backend/README.md (they come from the original FastAPI boilerplate)
 
 ### Frontend Development Mode
 
@@ -145,10 +148,10 @@ The frontend will be available at `http://localhost:3000` (or the port specified
 
 ## Project Foundations
 
-This project was bootstrapped using open-source foundations. For implementation details, see:
+This project was bootstrapped using open-source foundations.
 
-- **Backend:** Based on the FastAPI full-stack boilerplate
-  https://github.com/tiangolo/full-stack-fastapi-postgresql
+- **Infra + Backend:** Based on the FastAPI full-stack boilerplate
+  https://github.com/fastapi/full-stack-fastapi-template
   Used as a starting point for authentication, database setup, and project structure.
 
 - **Frontend:** Built using drop-in components from TailAdmin
