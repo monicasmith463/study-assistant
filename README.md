@@ -1,239 +1,158 @@
-# Full Stack FastAPI Template
+# MidtermMock
 
-<a href="https://github.com/fastapi/full-stack-fastapi-template/actions?query=workflow%3ATest" target="_blank"><img src="https://github.com/fastapi/full-stack-fastapi-template/workflows/Test/badge.svg" alt="Test"></a>
-<a href="https://coverage-badge.samuelcolvin.workers.dev/redirect/fastapi/full-stack-fastapi-template" target="_blank"><img src="https://coverage-badge.samuelcolvin.workers.dev/fastapi/full-stack-fastapi-template.svg" alt="Coverage"></a>
+### Try it out 🚀
+**Live demo:** http://54.70.243.149:5173/
 
-## Technology Stack and Features
+---
 
-- ⚡ [**FastAPI**](https://fastapi.tiangolo.com) for the Python backend API.
-    - 🧰 [SQLModel](https://sqlmodel.tiangolo.com) for the Python SQL database interactions (ORM).
-    - 🔍 [Pydantic](https://docs.pydantic.dev), used by FastAPI, for the data validation and settings management.
-    - 💾 [PostgreSQL](https://www.postgresql.org) as the SQL database.
-- 🚀 [React](https://react.dev) for the frontend.
-    - 💃 Using TypeScript, hooks, Vite, and other parts of a modern frontend stack.
-    - 🎨 [Chakra UI](https://chakra-ui.com) for the frontend components.
-    - 🤖 An automatically generated frontend client.
-    - 🧪 [Playwright](https://playwright.dev) for End-to-End testing.
-    - 🦇 Dark mode support.
-- 🐋 [Docker Compose](https://www.docker.com) for development and production.
-- 🔒 Secure password hashing by default.
-- 🔑 JWT (JSON Web Token) authentication.
-- 📫 Email based password recovery.
-- ✅ Tests with [Pytest](https://pytest.org).
-- 📞 [Traefik](https://traefik.io) as a reverse proxy / load balancer.
-- 🚢 Deployment instructions using Docker Compose, including how to set up a frontend Traefik proxy to handle automatic HTTPS certificates.
-- 🏭 CI (continuous integration) and CD (continuous deployment) based on GitHub Actions.
+## Overview
 
-### Dashboard Login
+MidtermMock enables students to **learn by doing** by turning raw course materials into practice exams. Instead of rereading lecture slides, students upload their documents (PDFs, Word docs, PowerPoints, or plain text) and receive AI-generated questions that resemble real exam questions.
 
-[![API docs](img/login.png)](https://github.com/fastapi/full-stack-fastapi-template)
+Each exam is automatically scored with detailed, context-aware explanations—explained in a way that mirrors how the instructor presented the material. Students can retake exams, review explanations, and track their progress over time.
 
-### Dashboard - Admin
+---
 
-[![API docs](img/dashboard.png)](https://github.com/fastapi/full-stack-fastapi-template)
+## User Journey
 
-### Dashboard - Create User
 
-[![API docs](img/dashboard-create.png)](https://github.com/fastapi/full-stack-fastapi-template)
+**1. Document Upload**
+Upload course materials (PDF, DOCX, PPT, TXT) for processing.
+<p align="center">
+  <img src="screenshots/upload.png" width="720" />
+</p>
 
-### Dashboard - Items
+**2. Exam Configuration**
+Configure question count, difficulty, and question types.
+<p align="center">
+  <img src="screenshots/exam-config.png" width="720" />
+</p>
 
-[![API docs](img/dashboard-items.png)](https://github.com/fastapi/full-stack-fastapi-template)
+**3. Exam in Progress**
+Take the interactive mock exam.
+<p align="center">
+  <img src="screenshots/exam.png" width="720" />
+</p>
 
-### Dashboard - User Settings
+**4. Results & Explanations**
+Automatic scoring with explanations grounded in the original document.
+<p align="center">
+  <img src="screenshots/exam-results.png" width="720" />
+</p>
 
-[![API docs](img/dashboard-user-settings.png)](https://github.com/fastapi/full-stack-fastapi-template)
+**5. Progress Tracking and Retakes**
+Track your highest score on exams and retake them to improve.
+<p align="center">
+  <img src="screenshots/my-exams.png" width="720" />
+</p>
 
-### Dashboard - Dark Mode
+## Key Features
 
-[![API docs](img/dashboard-dark.png)](https://github.com/fastapi/full-stack-fastapi-template)
+- Upload documents (PDF, DOCX, PPT, TXT)
+- Generate practice exams from uploaded content
+- Configurable difficulty and question types
+- Automatic scoring with grounded explanations
+- Exam retakes and score history
+- User authentication
 
-### Interactive API Documentation
+---
 
-[![API docs](img/docs.png)](https://github.com/fastapi/full-stack-fastapi-template)
+## Architecture & Design Decisions ⭐
 
-## How To Use It
+I chose **simplicity and reliability over maximum scale**, given the project’s scope.
 
-You can **just fork or clone** this repository and use it as is.
+### Decision Matrix
 
-✨ It just works. ✨
+| Problem | Decision | Tradeoff |
+|-------|----------|----------|
+| Generating questions from user documents | LLM-based generation (GPT-4o-mini via LangChain) | Non-deterministic and costlier. Scoring and validation remain deterministic in code. |
+| Grounding explanations in source material | Top-K semantic retrieval over document chunks | Explanations are limited to retrieved context, but remain grounded in lecture content rather than hallucinated knowledge. |
+| Long documents causing token-limit failures | Hard-cap document context to 15,000 characters during generation | May omit later content, but keeps latency and cost predictable. |
+| Question format consistency | Strict Pydantic validation + prompt constraints | Less flexible, but prevents malformed questions from reaching users. |
+| Explanation relevance | pgvector in PostgreSQL instead of a separate vector DB | Simpler deployment and atomic writes; not designed for massive scale. |
+| Long-running AI and document-processing tasks | Asynchronous background jobs | Keeps the API responsive during generation and extraction. |
+| Development hygiene | Early CI/CD investment | Slower initial setup, but caught critical bugs early. |
 
-### How to Use a Private Repository
+---
 
-If you want to have a private repository, GitHub won't allow you to simply fork it as it doesn't allow changing the visibility of forks.
+### Deterministic vs. Non-Deterministic Boundaries
 
-But you can do the following:
+**Deterministic components:**
+- Scoring logic (pure Python)
+- Question validation (Pydantic models)
+- Exam structure (DB constraints + API contracts)
 
-- Create a new GitHub repo, for example `my-full-stack`.
-- Clone this repository manually, set the name with the name of the project you want to use, for example `my-full-stack`:
+LLMs handle creativity. Code enforces correctness and consistency.
 
-```bash
-git clone git@github.com:fastapi/full-stack-fastapi-template.git my-full-stack
-```
+---
 
-- Enter into the new directory:
+### Document Processing
 
-```bash
-cd my-full-stack
-```
+Multiple document formats are supported by **AWS Textract**. Extracted text is chunked, embedded, and stored using **pgvector** in PostgreSQL.
 
-- Set the new origin to your new repository, copy it from the GitHub interface, for example:
+When generating feedback for incorrect answers, the system performs **Top-K semantic retrieval** to fetch the most relevant chunks from the original document, which are determined with **cosine similarity** to the question's embedding. This ensures explanations are grounded in the lecture material itself, not inferred from external knowledge or generic model priors.
 
-```bash
-git remote set-url origin git@github.com:octocat/my-full-stack.git
-```
+---
 
-- Add this repo as another "remote" to allow you to get updates later:
+## Core Design
 
-```bash
-git remote add upstream git@github.com:fastapi/full-stack-fastapi-template.git
-```
+- **Frontend:** Next.js
+- **API:** Custom endpoints extending a FastAPI boilerplate (Python)
+- **AI:** OpenAI GPT via LangChain with Pydantic structured output.
+  Prompt rules enforce question-type consistency, difficulty semantics, and document-only knowledge.
 
-- Push the code to your new repository:
+---
 
-```bash
-git push -u origin master
-```
+## Core Tech Stack
 
-### Update From the Original Template
+### Backend
+- FastAPI (Python)
+- PostgreSQL + pgvector
+- LangChain + OpenAI
+- AWS Textract
 
-After cloning the repository, and after doing changes, you might want to get the latest changes from this original template.
+### Frontend
+- Next.js (React, TypeScript)
+- Tailwind CSS
+- TanStack Query
 
-- Make sure you added the original repository as a remote, you can check it with:
+### Infrastructure
+- Docker & Docker Compose
 
-```bash
-git remote -v
+---
 
-origin    git@github.com:octocat/my-full-stack.git (fetch)
-origin    git@github.com:octocat/my-full-stack.git (push)
-upstream    git@github.com:fastapi/full-stack-fastapi-template.git (fetch)
-upstream    git@github.com:fastapi/full-stack-fastapi-template.git (push)
-```
+## Quick Start
 
-- Pull the latest changes without merging:
+### Backend Development Mode
 
-```bash
-git pull --no-commit upstream master
-```
-
-This will download the latest changes from this template without committing them, that way you can check everything is right before committing.
-
-- If there are conflicts, solve them in your editor.
-
-- Once you are done, commit the changes:
-
-```bash
-git merge --continue
-```
-
-### Configure
-
-You can then update configs in the `.env` files to customize your configurations.
-
-Before deploying it, make sure you change at least the values for:
-
-- `SECRET_KEY`
-- `FIRST_SUPERUSER_PASSWORD`
-- `POSTGRES_PASSWORD`
-
-You can (and should) pass these as environment variables from secrets.
-
-Read the [deployment.md](./deployment.md) docs for more details.
-
-### Generate Secret Keys
-
-Some environment variables in the `.env` file have a default value of `changethis`.
-
-You have to change them with a secret key, to generate secret keys you can run the following command:
+.env is provided (just change the secrets to your own)
 
 ```bash
-python -c "import secrets; print(secrets.token_urlsafe(32))"
+git clone https://github.com/monicasmith463/midterm-mock
+cd midterm-mock
 ```
 
-Copy the content and use that as password / secret key. And run that again to generate another secure key.
+Then follow the instructions in backend/README.md (they come from the original FastAPI boilerplate)
 
-## How To Use It - Alternative With Copier
+### Frontend Development Mode
 
-This repository also supports generating a new project using [Copier](https://copier.readthedocs.io).
-
-It will copy all the files, ask you configuration questions, and update the `.env` files with your answers.
-
-### Install Copier
-
-You can install Copier with:
+To run the frontend in development mode with hot reload:
 
 ```bash
-pip install copier
+cd frontend
+npm install
+npm run dev
 ```
 
-Or better, if you have [`pipx`](https://pipx.pypa.io/), you can run it with:
+The frontend will be available at `http://localhost:3000` (or the port specified in your Next.js config).
 
-```bash
-pipx install copier
-```
+## Project Foundations
 
-**Note**: If you have `pipx`, installing copier is optional, you could run it directly.
+This project was bootstrapped using open-source foundations.
 
-### Generate a Project With Copier
+- **Infra + Backend:** Based on the FastAPI full-stack boilerplate
+  https://github.com/fastapi/full-stack-fastapi-template
+  Used as a starting point for authentication, database setup, and project structure.
 
-Decide a name for your new project's directory, you will use it below. For example, `my-awesome-project`.
-
-Go to the directory that will be the parent of your project, and run the command with your project's name:
-
-```bash
-copier copy https://github.com/fastapi/full-stack-fastapi-template my-awesome-project --trust
-```
-
-If you have `pipx` and you didn't install `copier`, you can run it directly:
-
-```bash
-pipx run copier copy https://github.com/fastapi/full-stack-fastapi-template my-awesome-project --trust
-```
-
-**Note** the `--trust` option is necessary to be able to execute a [post-creation script](https://github.com/fastapi/full-stack-fastapi-template/blob/master/.copier/update_dotenv.py) that updates your `.env` files.
-
-### Input Variables
-
-Copier will ask you for some data, you might want to have at hand before generating the project.
-
-But don't worry, you can just update any of that in the `.env` files afterwards.
-
-The input variables, with their default values (some auto generated) are:
-
-- `project_name`: (default: `"FastAPI Project"`) The name of the project, shown to API users (in .env).
-- `stack_name`: (default: `"fastapi-project"`) The name of the stack used for Docker Compose labels and project name (no spaces, no periods) (in .env).
-- `secret_key`: (default: `"changethis"`) The secret key for the project, used for security, stored in .env, you can generate one with the method above.
-- `first_superuser`: (default: `"admin@example.com"`) The email of the first superuser (in .env).
-- `first_superuser_password`: (default: `"changethis"`) The password of the first superuser (in .env).
-- `smtp_host`: (default: "") The SMTP server host to send emails, you can set it later in .env.
-- `smtp_user`: (default: "") The SMTP server user to send emails, you can set it later in .env.
-- `smtp_password`: (default: "") The SMTP server password to send emails, you can set it later in .env.
-- `emails_from_email`: (default: `"info@example.com"`) The email account to send emails from, you can set it later in .env.
-- `postgres_password`: (default: `"changethis"`) The password for the PostgreSQL database, stored in .env, you can generate one with the method above.
-- `sentry_dsn`: (default: "") The DSN for Sentry, if you are using it, you can set it later in .env.
-
-## Backend Development
-
-Backend docs: [backend/README.md](./backend/README.md).
-
-## Frontend Development
-
-Frontend docs: [frontend/README.md](./frontend/README.md).
-
-## Deployment
-
-Deployment docs: [deployment.md](./deployment.md).
-
-## Development
-
-General development docs: [development.md](./development.md).
-
-This includes using Docker Compose, custom local domains, `.env` configurations, etc.
-
-## Release Notes
-
-Check the file [release-notes.md](./release-notes.md).
-
-## License
-
-The Full Stack FastAPI Template is licensed under the terms of the MIT license.
+- **Frontend:** Built using drop-in components from TailAdmin
+  https://tailadmin.com
