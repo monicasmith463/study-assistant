@@ -3,6 +3,17 @@
 ### Try it out 🚀
 **Live demo:** http://54.70.243.149:5173/
 
+## 🚀 Try It in 3 Minutes
+
+**Live demo:** http://54.70.243.149:5173/
+
+1. Create an account
+2. Upload a lecture or slide deck
+3. Configure difficulty and question types
+4. Take the mock exam and review explanations for incorrect answers
+
+**Example lecture to try:** [MIT 6.0001 Lecture 4: Decomposition, Abstraction, Functions](https://ocw.mit.edu/courses/6-0001-introduction-to-computer-science-and-programming-in-python-fall-2016/resources/mit6_0001f16_lec4/)
+
 ---
 
 ## Overview
