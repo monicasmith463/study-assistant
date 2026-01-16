@@ -1,9 +1,6 @@
 # MidtermMock
 
-### Try it out 🚀
-**Live demo:** http://54.70.243.149:5173/
-
-## 🚀 Try It in 3 Minutes
+### 🚀 Try It in 3 Minutes
 
 **Live demo:** http://54.70.243.149:5173/
 
